@@ -134,9 +134,9 @@ import (
 )
 
 func main() {
-	fmt.Println(is.Email("user@example.com"))
-	fmt.Println(is.UUID("550e8400-e29b-41d4-a716-446655440000"))
-	fmt.Println(is.IP("2001:db8::1"))
+	fmt.Println(is.Email("user@example.com"))                    // true
+	fmt.Println(is.UUID("550e8400-e29b-41d4-a716-446655440000")) // true
+	fmt.Println(is.IP("2001:db8::1"))                            // true
 }
 ```
 
@@ -168,7 +168,7 @@ func main() {
 	s, _ := ls.Marshal(12345)
 	id, _ := ls.Unmarshal(s)
 
-	fmt.Println(s, id)
+	fmt.Println(s, id) // 000003D7 12345
 }
 ```
 
