@@ -21,26 +21,24 @@ versioned module path.
 стилів рядків, генерацію slug-ів, транслітерацію Unicode, множини, короткі
 зворотні ключі, generic-хелпери і логіку з третім станом `Unknown`.
 
-## Модулі
+## Зміст
 
-Назва кожного модуля веде до його репозиторію; колонка «Довідник» — до
-документації пакета.
+Перейдіть до потрібного пакета; кожен блок завершується посиланнями на
+репозиторій і довідник.
 
-| Модуль | Що закриває | Довідник |
-|---|---|---|
-| [`env`](https://github.com/goloop/env) | `.env` файли, process environment і struct mapping | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/env/v2) |
-| [`g`](https://github.com/goloop/g) | Generic-хелпери для слайсів, чисел, умов і конвертацій | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/g/v2) |
-| [`is`](https://github.com/goloop/is) | Перевірка форматів і значень | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/is/v2) |
-| [`key`](https://github.com/goloop/key) | Зворотні короткі ключі для `uint64` ID | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/key/v2) |
-| [`log`](https://github.com/goloop/log) | Рівневе логування у кілька напрямків | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/log/v2) |
-| [`opt`](https://github.com/goloop/opt) | Парсинг CLI-аргументів у структури | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/opt/v2) |
-| [`qp`](https://github.com/goloop/qp) | Типізоване читання URL query-параметрів | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/qp/v2) |
-| [`resp`](https://github.com/goloop/resp) | HTTP response helpers поверх `net/http` | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/resp/v2) |
-| [`scs`](https://github.com/goloop/scs) | Перетворення і визначення стилів рядків | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/scs/v2) |
-| [`set`](https://github.com/goloop/set) | Generic-множини для comparable типів | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/set/v2) |
-| [`slug`](https://github.com/goloop/slug) | URL-friendly slug-и з Unicode-тексту | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/slug/v2) |
-| [`t13n`](https://github.com/goloop/t13n) | Unicode-to-ASCII транслітерація | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/t13n/v2) |
-| [`trit`](https://github.com/goloop/trit) | Тризначна логіка: `False`, `Unknown`, `True` | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/trit/v2) |
+- [**env** — .env файли, process environment і struct mapping](#env)
+- [**g** — generic-хелпери для слайсів, чисел, умов і конвертацій](#g)
+- [**is** — перевірка форматів і значень](#is)
+- [**key** — зворотні короткі ключі для uint64 ID](#key)
+- [**log** — рівневе логування у кілька напрямків](#log)
+- [**opt** — парсинг CLI-аргументів у структури](#opt)
+- [**qp** — типізоване читання URL query-параметрів](#qp)
+- [**resp** — HTTP response helpers поверх net/http](#resp)
+- [**scs** — перетворення і визначення стилів рядків](#scs)
+- [**set** — generic-множини для comparable типів](#set)
+- [**slug** — URL-friendly slug-и з Unicode-тексту](#slug)
+- [**t13n** — Unicode-to-ASCII транслітерація](#t13n)
+- [**trit** — тризначна логіка: False, Unknown, True](#trit)
 
 ## env
 

@@ -21,26 +21,23 @@ reading query parameters, writing HTTP responses, producing logs, converting
 string styles, building slugs, transliterating Unicode text, working with sets,
 short reversible keys, generic helpers and nullable/unknown boolean logic.
 
-## Modules
+## Contents
 
-Each module name links to its repository; the reference column links to the
-package documentation.
+Jump to a package; each section ends with links to its repository and reference.
 
-| Module | Solves | Reference |
-|---|---|---|
-| [`env`](https://github.com/goloop/env) | `.env` files, process environment and struct mapping | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/env/v2) |
-| [`g`](https://github.com/goloop/g) | Generic helpers for slices, numbers, conditions and conversions | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/g/v2) |
-| [`is`](https://github.com/goloop/is) | Format and value validation | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/is/v2) |
-| [`key`](https://github.com/goloop/key) | Reversible short keys for `uint64` IDs | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/key/v2) |
-| [`log`](https://github.com/goloop/log) | Multi-output leveled logging | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/log/v2) |
-| [`opt`](https://github.com/goloop/opt) | Command-line argument parsing into structs | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/opt/v2) |
-| [`qp`](https://github.com/goloop/qp) | Typed URL query parameter parsing | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/qp/v2) |
-| [`resp`](https://github.com/goloop/resp) | HTTP response helpers on top of `net/http` | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/resp/v2) |
-| [`scs`](https://github.com/goloop/scs) | String case conversion and detection | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/scs/v2) |
-| [`set`](https://github.com/goloop/set) | Generic comparable sets | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/set/v2) |
-| [`slug`](https://github.com/goloop/slug) | URL-friendly slugs from Unicode text | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/slug/v2) |
-| [`t13n`](https://github.com/goloop/t13n) | Unicode-to-ASCII transliteration | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/t13n/v2) |
-| [`trit`](https://github.com/goloop/trit) | Three-valued logic: `False`, `Unknown`, `True` | [pkg.go.dev](https://pkg.go.dev/github.com/goloop/trit/v2) |
+- [**env** — .env files, process environment and struct mapping](#env)
+- [**g** — generic helpers for slices, numbers, conditions and conversions](#g)
+- [**is** — format and value validation](#is)
+- [**key** — reversible short keys for uint64 IDs](#key)
+- [**log** — multi-output leveled logging](#log)
+- [**opt** — command-line argument parsing into structs](#opt)
+- [**qp** — typed URL query parameter parsing](#qp)
+- [**resp** — HTTP response helpers on top of net/http](#resp)
+- [**scs** — string case conversion and detection](#scs)
+- [**set** — generic comparable sets](#set)
+- [**slug** — URL-friendly slugs from Unicode text](#slug)
+- [**t13n** — Unicode-to-ASCII transliteration](#t13n)
+- [**trit** — three-valued logic: False, Unknown, True](#trit)
 
 ## env
 
