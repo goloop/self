@@ -5,21 +5,22 @@
 📖 **English** · [Українська](README.UK.md)
 
 `goloop` is a group of small, focused Go modules for the everyday work around
-configuration, command-line tools, HTTP handlers, validation, logging,
-collections, identifiers, strings and three-valued logic. The modules are
-independent: you import only the package you need, and each package keeps its
-own versioned module path.
+configuration, command-line tools, HTTP handlers, routing and middleware,
+WebSocket connections, validation, logging, collections, identifiers, strings
+and three-valued logic. The modules are independent: you import only the package
+you need, and each package keeps its own versioned module path.
 
 The current group is:
 
-`env`, `g`, `is`, `key`, `log`, `opt`, `qp`, `resp`, `scs`, `set`, `slug`,
-`t13n`, `trit`.
+`env`, `g`, `is`, `key`, `log`, `middlewares`, `mux`, `opt`, `qp`, `resp`,
+`scs`, `set`, `slug`, `t13n`, `trit`, `websocket`.
 
 Together they cover the boring but important edges of application code: reading
 configuration from `.env` files, parsing CLI arguments, validating user input,
-reading query parameters, writing HTTP responses, producing logs, converting
-string styles, building slugs, transliterating Unicode text, working with sets,
-short reversible keys, generic helpers and nullable/unknown boolean logic.
+reading query parameters, routing requests, chaining middleware, writing HTTP
+responses, speaking the WebSocket protocol, producing logs, converting string
+styles, building slugs, transliterating Unicode text, working with sets, short
+reversible keys, generic helpers and nullable/unknown boolean logic.
 
 ## Contents
 
@@ -30,6 +31,8 @@ Jump to a package; each section ends with links to its repository and reference.
 - [**is** — format and value validation](#is)
 - [**key** — reversible short keys for uint64 IDs](#key)
 - [**log** — multi-output leveled logging](#log)
+- [**middlewares** — net/http middleware: request ID, real IP, recovery, logging and more](#middlewares)
+- [**mux** — ergonomic routing over net/http.ServeMux](#mux)
 - [**opt** — command-line argument parsing into structs](#opt)
 - [**qp** — typed URL query parameter parsing](#qp)
 - [**resp** — HTTP response helpers on top of net/http](#resp)
@@ -38,6 +41,7 @@ Jump to a package; each section ends with links to its repository and reference.
 - [**slug** — URL-friendly slugs from Unicode text](#slug)
 - [**t13n** — Unicode-to-ASCII transliteration](#t13n)
 - [**trit** — three-valued logic: False, Unknown, True](#trit)
+- [**websocket** — RFC 6455 WebSocket client and server](#websocket)
 
 ## env
 
@@ -198,6 +202,86 @@ func main() {
 ```
 
 **Learn more:** [github.com/goloop/log](https://github.com/goloop/log) · [reference](https://pkg.go.dev/github.com/goloop/log/v2)
+
+## middlewares
+
+`middlewares` is a set of HTTP middleware for the standard `net/http`. Every
+middleware has the ordinary `func(http.Handler) http.Handler` shape, so it works
+with any router: the standard `http.ServeMux`, the `mux` router or hand-written
+handlers.
+
+It is not a framework. It closes the common cross-cutting needs the standard
+library leaves out - request identifiers, real client IP, panic recovery,
+request logging, timeouts, response compression, concurrency throttling, CORS
+and security headers - and logs through the standard `log/slog`.
+
+```go
+package main
+
+import (
+	"net/http"
+
+	"github.com/goloop/middlewares"
+)
+
+func main() {
+	mux := http.NewServeMux()
+	// ... register handlers on mux ...
+
+	h := middlewares.Chain(
+		middlewares.RequestID(),
+		middlewares.RealIP(),
+		middlewares.Recoverer(),
+		middlewares.Logger(),
+		middlewares.Compress(),
+	)(mux)
+
+	http.ListenAndServe(":8080", h)
+}
+```
+
+**Learn more:** [github.com/goloop/middlewares](https://github.com/goloop/middlewares) · [reference](https://pkg.go.dev/github.com/goloop/middlewares)
+
+## mux
+
+`mux` is a small routing layer over the standard `net/http.ServeMux`. Since Go
+1.22 the standard multiplexer already understands method patterns, wildcard
+segments and precedence, so `mux` does not replace it: it adds the ergonomics
+the standard library leaves out - method helpers, prefix groups, middleware
+chains and an optional error-returning handler.
+
+The patterns are plain `net/http.ServeMux` patterns, not a custom syntax, and a
+`Router` is itself an `http.Handler`, so it composes with the rest of
+`net/http`.
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/goloop/mux"
+)
+
+func main() {
+	r := mux.New()
+
+	r.Get("/health", func(w http.ResponseWriter, req *http.Request) {
+		w.Write([]byte("ok"))
+	})
+
+	r.Route("/api/v1", func(r *mux.Router) {
+		r.Get("/users/{id}", func(w http.ResponseWriter, req *http.Request) {
+			fmt.Fprintf(w, "user %s", req.PathValue("id"))
+		})
+	})
+
+	http.ListenAndServe(":8080", r)
+}
+```
+
+**Learn more:** [github.com/goloop/mux](https://github.com/goloop/mux) · [reference](https://pkg.go.dev/github.com/goloop/mux)
 
 ## opt
 
@@ -459,12 +543,53 @@ func main() {
 
 **Learn more:** [github.com/goloop/trit](https://github.com/goloop/trit) · [reference](https://pkg.go.dev/github.com/goloop/trit/v2)
 
+## websocket
+
+`websocket` implements the WebSocket protocol (RFC 6455) on top of the standard
+library. It provides a server-side upgrade, a client-side dial, the
+permessage-deflate extension and subprotocol negotiation.
+
+A connection is a `Conn`. The server upgrade accepts same-origin requests by
+default, which guards against cross-site hijacking; configure the allowed
+origins explicitly when you need cross-origin clients.
+
+```go
+package main
+
+import (
+	"net/http"
+
+	"github.com/goloop/websocket"
+)
+
+func echo(w http.ResponseWriter, r *http.Request) {
+	ws, err := websocket.Upgrade(w, r)
+	if err != nil {
+		return
+	}
+	defer ws.Close()
+
+	for {
+		mt, data, err := ws.ReadMessage()
+		if err != nil {
+			break
+		}
+		if err := ws.WriteMessage(mt, data); err != nil {
+			break
+		}
+	}
+}
+```
+
+**Learn more:** [github.com/goloop/websocket](https://github.com/goloop/websocket) · [reference](https://pkg.go.dev/github.com/goloop/websocket)
+
 ## How to choose
 
-Use `env` and `opt` at program startup, `qp` and `resp` in HTTP handlers,
-`is` for validation, `log` for operational output, `set` and `g` inside
-business logic, `key` for public reversible IDs, `scs`, `slug` and `t13n` for
-string processing, and `trit` whenever unknown state is a first-class value.
+Use `env` and `opt` at program startup, `mux`, `middlewares`, `qp` and `resp`
+in HTTP handlers, `websocket` for realtime connections, `is` for validation,
+`log` for operational output, `set` and `g` inside business logic, `key` for
+public reversible IDs, `scs`, `slug` and `t13n` for string processing, and
+`trit` whenever unknown state is a first-class value.
 
 Each module is intentionally small. You do not need to adopt the whole group:
 install only the module that closes the specific problem in front of you.

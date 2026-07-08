@@ -5,19 +5,20 @@
 📖 [English](README.md) · **Українська**
 
 `goloop` — це група невеликих, сфокусованих Go-модулів для щоденної роботи з
-конфігурацією, CLI, HTTP, валідацією, логуванням, колекціями, ідентифікаторами,
-рядками та тризначною логікою. Модулі незалежні: ви підключаєте тільки той
-пакет, який потрібен конкретному застосунку, а кожен пакет має власний
-versioned module path.
+конфігурацією, CLI, HTTP, роутингом і middleware, WebSocket-з'єднаннями,
+валідацією, логуванням, колекціями, ідентифікаторами, рядками та тризначною
+логікою. Модулі незалежні: ви підключаєте тільки той пакет, який потрібен
+конкретному застосунку, а кожен пакет має власний versioned module path.
 
 Поточна група:
 
-`env`, `g`, `is`, `key`, `log`, `opt`, `qp`, `resp`, `scs`, `set`, `slug`,
-`t13n`, `trit`.
+`env`, `g`, `is`, `key`, `log`, `middlewares`, `mux`, `opt`, `qp`, `resp`,
+`scs`, `set`, `slug`, `t13n`, `trit`, `websocket`.
 
 Разом вони закривають “нудні”, але важливі краї прикладного коду: читання
 конфігурації з `.env`, парсинг аргументів командного рядка, перевірку вхідних
-даних, читання query-параметрів, запис HTTP-відповідей, логування, перетворення
+даних, читання query-параметрів, роутинг запитів, побудову ланцюжків middleware,
+запис HTTP-відповідей, роботу з протоколом WebSocket, логування, перетворення
 стилів рядків, генерацію slug-ів, транслітерацію Unicode, множини, короткі
 зворотні ключі, generic-хелпери і логіку з третім станом `Unknown`.
 
@@ -31,6 +32,8 @@ versioned module path.
 - [**is** — перевірка форматів і значень](#is)
 - [**key** — зворотні короткі ключі для uint64 ID](#key)
 - [**log** — рівневе логування у кілька напрямків](#log)
+- [**middlewares** — net/http middleware: request ID, real IP, recovery, логування тощо](#middlewares)
+- [**mux** — ергономічний роутинг поверх net/http.ServeMux](#mux)
 - [**opt** — парсинг CLI-аргументів у структури](#opt)
 - [**qp** — типізоване читання URL query-параметрів](#qp)
 - [**resp** — HTTP response helpers поверх net/http](#resp)
@@ -39,6 +42,7 @@ versioned module path.
 - [**slug** — URL-friendly slug-и з Unicode-тексту](#slug)
 - [**t13n** — Unicode-to-ASCII транслітерація](#t13n)
 - [**trit** — тризначна логіка: False, Unknown, True](#trit)
+- [**websocket** — WebSocket (RFC 6455): клієнт і сервер](#websocket)
 
 ## env
 
@@ -201,6 +205,85 @@ func main() {
 ```
 
 **Детальніше:** [github.com/goloop/log](https://github.com/goloop/log) · [довідник](https://pkg.go.dev/github.com/goloop/log/v2)
+
+## middlewares
+
+`middlewares` — набір HTTP middleware для стандартного `net/http`. Кожен
+middleware має звичну форму `func(http.Handler) http.Handler`, тому працює з
+будь-яким роутером: стандартним `http.ServeMux`, роутером `mux` чи рукописними
+handlers.
+
+Це не framework. Він закриває типові наскрізні потреби, які стандартна
+бібліотека лишає осторонь - request identifiers, real client IP, panic recovery,
+логування запитів, timeouts, стиснення відповідей, обмеження конкурентності,
+CORS і security headers - і логує через стандартний `log/slog`.
+
+```go
+package main
+
+import (
+	"net/http"
+
+	"github.com/goloop/middlewares"
+)
+
+func main() {
+	mux := http.NewServeMux()
+	// ... реєстрація handlers на mux ...
+
+	h := middlewares.Chain(
+		middlewares.RequestID(),
+		middlewares.RealIP(),
+		middlewares.Recoverer(),
+		middlewares.Logger(),
+		middlewares.Compress(),
+	)(mux)
+
+	http.ListenAndServe(":8080", h)
+}
+```
+
+**Детальніше:** [github.com/goloop/middlewares](https://github.com/goloop/middlewares) · [довідник](https://pkg.go.dev/github.com/goloop/middlewares)
+
+## mux
+
+`mux` — невеликий шар роутингу поверх стандартного `net/http.ServeMux`. Починаючи
+з Go 1.22 стандартний мультиплексер уже розуміє method patterns, wildcard-сегменти
+і precedence, тому `mux` його не замінює: він додає ергономіку, якої стандартній
+бібліотеці бракує - method helpers, prefix groups, ланцюжки middleware і
+опційний handler, що повертає помилку.
+
+Патерни — це звичайні патерни `net/http.ServeMux`, а не власний синтаксис, і сам
+`Router` є `http.Handler`, тож він компонується з рештою `net/http`.
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/goloop/mux"
+)
+
+func main() {
+	r := mux.New()
+
+	r.Get("/health", func(w http.ResponseWriter, req *http.Request) {
+		w.Write([]byte("ok"))
+	})
+
+	r.Route("/api/v1", func(r *mux.Router) {
+		r.Get("/users/{id}", func(w http.ResponseWriter, req *http.Request) {
+			fmt.Fprintf(w, "user %s", req.PathValue("id"))
+		})
+	})
+
+	http.ListenAndServe(":8080", r)
+}
+```
+
+**Детальніше:** [github.com/goloop/mux](https://github.com/goloop/mux) · [довідник](https://pkg.go.dev/github.com/goloop/mux)
 
 ## opt
 
@@ -463,12 +546,53 @@ func main() {
 
 **Детальніше:** [github.com/goloop/trit](https://github.com/goloop/trit) · [довідник](https://pkg.go.dev/github.com/goloop/trit/v2)
 
+## websocket
+
+`websocket` реалізує протокол WebSocket (RFC 6455) поверх стандартної
+бібліотеки. Він надає server-side upgrade, client-side dial, розширення
+permessage-deflate і узгодження subprotocol.
+
+З'єднання — це `Conn`. Server upgrade за замовчуванням приймає only-same-origin
+запити, що захищає від cross-site hijacking; коли потрібні cross-origin клієнти,
+задайте дозволені origins явно.
+
+```go
+package main
+
+import (
+	"net/http"
+
+	"github.com/goloop/websocket"
+)
+
+func echo(w http.ResponseWriter, r *http.Request) {
+	ws, err := websocket.Upgrade(w, r)
+	if err != nil {
+		return
+	}
+	defer ws.Close()
+
+	for {
+		mt, data, err := ws.ReadMessage()
+		if err != nil {
+			break
+		}
+		if err := ws.WriteMessage(mt, data); err != nil {
+			break
+		}
+	}
+}
+```
+
+**Детальніше:** [github.com/goloop/websocket](https://github.com/goloop/websocket) · [довідник](https://pkg.go.dev/github.com/goloop/websocket)
+
 ## Як обрати
 
-Використовуйте `env` і `opt` на старті програми, `qp` і `resp` у HTTP
-handlers, `is` для валідації, `log` для operational output, `set` і `g` у
-business logic, `key` для публічних reversible IDs, `scs`, `slug` і `t13n` для
-роботи з рядками, а `trit` тоді, коли unknown state є повноцінним значенням.
+Використовуйте `env` і `opt` на старті програми, `mux`, `middlewares`, `qp` і
+`resp` у HTTP handlers, `websocket` для realtime-з'єднань, `is` для валідації,
+`log` для operational output, `set` і `g` у business logic, `key` для публічних
+reversible IDs, `scs`, `slug` і `t13n` для роботи з рядками, а `trit` тоді, коли
+unknown state є повноцінним значенням.
 
 Кожен модуль навмисно невеликий. Не потрібно приймати всю групу одразу:
 встановлюйте тільки той module, який закриває конкретну задачу перед вами.
