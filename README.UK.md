@@ -4,7 +4,7 @@
 
 📖 [English](README.md) · **Українська**
 
-`goloop` — це група невеликих, сфокусованих Go-модулів для щоденної роботи з
+`goloop` - це група невеликих, сфокусованих Go-модулів для щоденної роботи з
 конфігурацією, CLI, HTTP, роутингом і middleware, WebSocket-з'єднаннями,
 валідацією, логуванням, колекціями, ідентифікаторами, рядками та тризначною
 логікою. Модулі незалежні: ви підключаєте тільки той пакет, який потрібен
@@ -27,22 +27,22 @@
 Перейдіть до потрібного пакета; кожен блок завершується посиланнями на
 репозиторій і довідник.
 
-- [**env** — .env файли, process environment і struct mapping](#env)
-- [**g** — generic-хелпери для слайсів, чисел, умов і конвертацій](#g)
-- [**is** — перевірка форматів і значень](#is)
-- [**key** — зворотні короткі ключі для uint64 ID](#key)
-- [**log** — рівневе логування у кілька напрямків](#log)
-- [**middlewares** — net/http middleware: request ID, real IP, recovery, логування тощо](#middlewares)
-- [**mux** — ергономічний роутинг поверх net/http.ServeMux](#mux)
-- [**opt** — парсинг CLI-аргументів у структури](#opt)
-- [**qp** — типізоване читання URL query-параметрів](#qp)
-- [**resp** — HTTP response helpers поверх net/http](#resp)
-- [**scs** — перетворення і визначення стилів рядків](#scs)
-- [**set** — generic-множини для comparable типів](#set)
-- [**slug** — URL-friendly slug-и з Unicode-тексту](#slug)
-- [**t13n** — Unicode-to-ASCII транслітерація](#t13n)
-- [**trit** — тризначна логіка: False, Unknown, True](#trit)
-- [**websocket** — WebSocket (RFC 6455): клієнт і сервер](#websocket)
+- [**env** - .env файли, process environment і struct mapping](#env)
+- [**g** - generic-хелпери для слайсів, чисел, умов і конвертацій](#g)
+- [**is** - перевірка форматів і значень](#is)
+- [**key** - зворотні короткі ключі для uint64 ID](#key)
+- [**log** - рівневе логування у кілька напрямків](#log)
+- [**middlewares** - net/http middleware: request ID, real IP, recovery, логування тощо](#middlewares)
+- [**mux** - ергономічний роутинг поверх net/http.ServeMux](#mux)
+- [**opt** - парсинг CLI-аргументів у структури](#opt)
+- [**qp** - типізоване читання URL query-параметрів](#qp)
+- [**resp** - HTTP response helpers поверх net/http](#resp)
+- [**scs** - перетворення і визначення стилів рядків](#scs)
+- [**set** - generic-множини для comparable типів](#set)
+- [**slug** - URL-friendly slug-и з Unicode-тексту](#slug)
+- [**t13n** - Unicode-to-ASCII транслітерація](#t13n)
+- [**trit** - тризначна логіка: False, Unknown, True](#trit)
+- [**websocket** - WebSocket (RFC 6455): клієнт і сервер](#websocket)
 
 ## env
 
@@ -87,7 +87,7 @@ func main() {
 
 ## g
 
-`g` — це generic toolbox. Він збирає короткі функції, які в Go-проєктах часто
+`g` - це generic toolbox. Він збирає короткі функції, які в Go-проєктах часто
 переписують локально: умовне значення, ліниву умовну гілку, min/max, clamp,
 map/filter для слайсів, перевірку входження, конвертації, безпечну арифметику
 та поширені числові утиліти.
@@ -119,7 +119,7 @@ func main() {
 
 ## is
 
-`is` — пакет валідації. Кожна функція відповідає на одне питання про значення:
+`is` - пакет валідації. Кожна функція відповідає на одне питання про значення:
 чи це email, IP-адреса, IBAN, UUID, телефон, hex color, JWT, numeric string,
 latitude, variable name тощо.
 
@@ -152,7 +152,7 @@ func main() {
 основі вашого алфавіту. Це корисно для публічних ID, invite-кодів, номерів
 тікетів, купонів і URL-safe представлення внутрішніх числових ID.
 
-Головна абстракція — `Locksmith`: base-N encoder/decoder поверх заданого
+Головна абстракція - `Locksmith`: base-N encoder/decoder поверх заданого
 алфавіту. Dynamic keys мають мінімально потрібну довжину, fixed keys завжди
 мають рівно заданий розмір. Decode строгий: кожен валідний key має одну
 canonical форму і один numeric ID.
@@ -180,7 +180,7 @@ func main() {
 
 ## log
 
-`log` — рівневий logger із кількома outputs. Він може писати різні рівні в
+`log` - рівневий logger із кількома outputs. Він може писати різні рівні в
 різні writers, рендерити text або JSON, додавати timestamp і caller layout,
 префікси, кольори для terminal output і передавати помилки запису в error
 handler.
@@ -208,7 +208,7 @@ func main() {
 
 ## middlewares
 
-`middlewares` — набір HTTP middleware для стандартного `net/http`. Кожен
+`middlewares` - набір HTTP middleware для стандартного `net/http`. Кожен
 middleware має звичну форму `func(http.Handler) http.Handler`, тому працює з
 будь-яким роутером: стандартним `http.ServeMux`, роутером `mux` чи рукописними
 handlers.
@@ -247,13 +247,13 @@ func main() {
 
 ## mux
 
-`mux` — невеликий шар роутингу поверх стандартного `net/http.ServeMux`. Починаючи
+`mux` - невеликий шар роутингу поверх стандартного `net/http.ServeMux`. Починаючи
 з Go 1.22 стандартний мультиплексер уже розуміє method patterns, wildcard-сегменти
 і precedence, тому `mux` його не замінює: він додає ергономіку, якої стандартній
 бібліотеці бракує - method helpers, prefix groups, ланцюжки middleware і
 опційний handler, що повертає помилку.
 
-Патерни — це звичайні патерни `net/http.ServeMux`, а не власний синтаксис, і сам
+Патерни - це звичайні патерни `net/http.ServeMux`, а не власний синтаксис, і сам
 `Router` є `http.Handler`, тож він компонується з рештою `net/http`.
 
 ```go
@@ -358,11 +358,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 ## resp
 
-`resp` — тонкий helper-шар поверх `net/http` для типових HTTP-відповідей. Він
+`resp` - тонкий helper-шар поверх `net/http` для типових HTTP-відповідей. Він
 закриває JSON, JSONP, XML, HTML, strings, bytes, redirects, downloads, cookies,
 status codes і headers, не перетворюючись на web framework.
 
-Важлива деталь v2 — safe-by-default encoding: JSON/JSONP/XML спочатку
+Важлива деталь v2 - safe-by-default encoding: JSON/JSONP/XML спочатку
 кодуються в pooled buffer, тому serialization error повертається до того, як
 HTTP status буде відправлено клієнту. Для великих payloads можна явно увімкнути
 direct streaming, якщо такий trade-off кращий.
@@ -421,8 +421,8 @@ func main() {
 
 ## set
 
-`set` — generic-множина для comparable Go-значень. Вона напряму побудована на
-`map[T]struct{}`, тому identity — це рівно Go `==`: без reflection, без
+`set` - generic-множина для comparable Go-значень. Вона напряму побудована на
+`map[T]struct{}`, тому identity - це рівно Go `==`: без reflection, без
 custom hashing і без втрати елементів через collision.
 
 Пакет варто використовувати для deduplication, membership checks, set algebra
@@ -552,7 +552,7 @@ func main() {
 бібліотеки. Він надає server-side upgrade, client-side dial, розширення
 permessage-deflate і узгодження subprotocol.
 
-З'єднання — це `Conn`. Server upgrade за замовчуванням приймає only-same-origin
+З'єднання - це `Conn`. Server upgrade за замовчуванням приймає only-same-origin
 запити, що захищає від cross-site hijacking; коли потрібні cross-origin клієнти,
 задайте дозволені origins явно.
 

@@ -26,22 +26,22 @@ reversible keys, generic helpers and nullable/unknown boolean logic.
 
 Jump to a package; each section ends with links to its repository and reference.
 
-- [**env** — .env files, process environment and struct mapping](#env)
-- [**g** — generic helpers for slices, numbers, conditions and conversions](#g)
-- [**is** — format and value validation](#is)
-- [**key** — reversible short keys for uint64 IDs](#key)
-- [**log** — multi-output leveled logging](#log)
-- [**middlewares** — net/http middleware: request ID, real IP, recovery, logging and more](#middlewares)
-- [**mux** — ergonomic routing over net/http.ServeMux](#mux)
-- [**opt** — command-line argument parsing into structs](#opt)
-- [**qp** — typed URL query parameter parsing](#qp)
-- [**resp** — HTTP response helpers on top of net/http](#resp)
-- [**scs** — string case conversion and detection](#scs)
-- [**set** — generic comparable sets](#set)
-- [**slug** — URL-friendly slugs from Unicode text](#slug)
-- [**t13n** — Unicode-to-ASCII transliteration](#t13n)
-- [**trit** — three-valued logic: False, Unknown, True](#trit)
-- [**websocket** — RFC 6455 WebSocket client and server](#websocket)
+- [**env** - .env files, process environment and struct mapping](#env)
+- [**g** - generic helpers for slices, numbers, conditions and conversions](#g)
+- [**is** - format and value validation](#is)
+- [**key** - reversible short keys for uint64 IDs](#key)
+- [**log** - multi-output leveled logging](#log)
+- [**middlewares** - net/http middleware: request ID, real IP, recovery, logging and more](#middlewares)
+- [**mux** - ergonomic routing over net/http.ServeMux](#mux)
+- [**opt** - command-line argument parsing into structs](#opt)
+- [**qp** - typed URL query parameter parsing](#qp)
+- [**resp** - HTTP response helpers on top of net/http](#resp)
+- [**scs** - string case conversion and detection](#scs)
+- [**set** - generic comparable sets](#set)
+- [**slug** - URL-friendly slugs from Unicode text](#slug)
+- [**t13n** - Unicode-to-ASCII transliteration](#t13n)
+- [**trit** - three-valued logic: False, Unknown, True](#trit)
+- [**websocket** - RFC 6455 WebSocket client and server](#websocket)
 
 ## env
 
