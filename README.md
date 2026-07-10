@@ -233,16 +233,19 @@ func main() {
 
 ## kind
 
-`kind` is a cached reflection layer for classifying Go values and types. It is
-built for people writing parsers, decoders and binders - the code that takes a
-string, a database row or a config value and pushes it into an arbitrary Go
-type. Instead of hand-rolling `reflect` ("is this an int? a pointer to a struct?
-does it implement `TextUnmarshaler` on a pointer receiver? what is the element
-behind these two slices?"), you ask one cached descriptor with a flat vocabulary
-of predicates, so you can ship a parser without living inside `reflect`. It is a
-specific tool - if you never reach for `reflect`, you do not need it - but when
-you do, it removes the tedious, error-prone half of the job and caches the type
-analysis so a hot parse loop pays for it once per type.
+`kind` answers one question - "what is this type, and what can it do?" - for
+code that must handle arbitrary Go types at runtime. Its home ground is
+parsers, decoders and binders: env vars, config files, CLI flags, query
+parameters or database rows being pushed into structs the *caller* defines.
+Instead of hand-rolling `reflect` ("is this an int? a pointer to a struct? does
+it implement `TextUnmarshaler` on a pointer receiver?"), you ask one cached
+descriptor with a flat vocabulary of predicates. Beyond parsing it covers
+capability detection (does the type - or a pointer to it - implement
+`sql.Scanner`, `flag.Value`, a `Set(string) error` method?) and struct/tag
+walking for validators and generators; descriptors are cached per type, so hot
+parse loops pay for classification once. It is deliberately narrow: if your
+types are known at compile time, if one small `reflect` check would do, or if
+you need to *write* values rather than classify them, you do not need `kind`.
 
 ```go
 package main
