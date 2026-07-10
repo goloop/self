@@ -6,17 +6,17 @@
 
 `goloop` is a group of small, focused Go modules for the everyday work around
 configuration, command-line tools, HTTP handlers, routing and middleware,
-WebSocket connections, large language model APIs, validation, logging,
-collections, identifiers, strings, type reflection and three-valued logic. The
-modules are independent: you import only the package you need, and each package
-keeps its own versioned module path.
+WebSocket connections, large language model APIs, typed PostgreSQL queries,
+validation, logging, collections, identifiers, strings, type reflection and
+three-valued logic. The modules are independent: you import only the package
+you need, and each package keeps its own versioned module path.
 
 The current group is:
 
 `ai` (with the provider drivers `anthropic`, `openai`, `gemini`, `grok`,
 `deepseek`, `openrouter`, `ollama`, `mistral`, `cohere`), `env`, `g`, `is`,
-`key`, `kind`, `log`, `middlewares`, `mux`, `opt`, `qp`, `resp`, `scs`, `set`,
-`slug`, `t13n`, `trit`, `websocket`.
+`key`, `kind`, `log`, `middlewares`, `mux`, `opt`, `pgc`, `qp`, `resp`, `scs`,
+`set`, `slug`, `t13n`, `trit`, `websocket`.
 
 Together they cover the boring but important edges of application code: reading
 configuration from `.env` files, parsing CLI arguments, validating user input,
@@ -39,6 +39,7 @@ Jump to a package; each section ends with links to its repository and reference.
 - [**middlewares** - net/http middleware: request ID, real IP, recovery, logging and more](#middlewares)
 - [**mux** - ergonomic routing over net/http.ServeMux](#mux)
 - [**opt** - command-line argument parsing into structs](#opt)
+- [**pgc** - SQL queries compiled into type-safe Go for PostgreSQL](#pgc)
 - [**qp** - typed URL query parameter parsing](#qp)
 - [**resp** - HTTP response helpers on top of net/http](#resp)
 - [**scs** - string case conversion and detection](#scs)
@@ -413,6 +414,38 @@ func main() {
 
 **Learn more:** [github.com/goloop/opt](https://github.com/goloop/opt) · [reference](https://pkg.go.dev/github.com/goloop/opt/v2)
 
+## pgc
+
+`pgc` compiles annotated SQL queries into a type-safe Go package for
+PostgreSQL. You write plain SQL next to your migrations; pgc asks your
+development database what every parameter and column really is - the server
+itself is the type oracle, statements are prepared and described but never
+executed - and generates code that reads like a person wrote it: explicit
+`Scan` calls, godoc on every symbol, no reflection at runtime. The generated
+package imports only the standard library (`database/sql`, `context`,
+`time`), and pgc itself has zero third-party dependencies: it speaks the
+PostgreSQL wire protocol directly.
+
+```sql
+-- queries/users.sql
+
+-- name: GetUser :one
+-- Returns a single user by primary key.
+SELECT id, email, name, created_at
+FROM users
+WHERE id = $1;
+```
+
+```go
+q := db.New(sqlDB) // the generated package; *sql.DB or *sql.Tx
+
+u, err := q.GetUser(ctx, 42)   // (User, error), typed from the live schema
+users, err := q.ListUsers(ctx, 10, 0)
+err = q.WithTx(tx).DeleteUser(ctx, u.ID)
+```
+
+**Learn more:** [github.com/goloop/pgc](https://github.com/goloop/pgc) · [reference](https://pkg.go.dev/github.com/goloop/pgc)
+
 ## qp
 
 `qp` reads URL query parameters into typed Go values. It replaces the repeated
@@ -679,11 +712,11 @@ func echo(w http.ResponseWriter, r *http.Request) {
 
 Use `env` and `opt` at program startup, `mux`, `middlewares`, `qp` and `resp`
 in HTTP handlers, `websocket` for realtime connections, `ai` to talk to LLM
-providers behind one interface, `is` for validation, `log` for operational
-output, `set` and `g` inside business logic, `key` for public reversible IDs,
-`kind` when a parser or decoder needs to introspect types, `scs`, `slug` and
-`t13n` for string processing, and `trit` whenever unknown state is a
-first-class value.
+providers behind one interface, `pgc` to compile your SQL into typed Go
+against PostgreSQL, `is` for validation, `log` for operational output, `set`
+and `g` inside business logic, `key` for public reversible IDs, `kind` when a
+parser or decoder needs to introspect types, `scs`, `slug` and `t13n` for
+string processing, and `trit` whenever unknown state is a first-class value.
 
 Each module is intentionally small. You do not need to adopt the whole group:
 install only the module that closes the specific problem in front of you.

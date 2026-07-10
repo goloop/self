@@ -6,17 +6,18 @@
 
 `goloop` - це група невеликих, сфокусованих Go-модулів для щоденної роботи з
 конфігурацією, CLI, HTTP, роутингом і middleware, WebSocket-з'єднаннями, API
-великих мовних моделей, валідацією, логуванням, колекціями, ідентифікаторами,
-рядками, рефлексією типів та тризначною логікою. Модулі незалежні: ви
-підключаєте тільки той пакет, який потрібен конкретному застосунку, а кожен
-пакет має власний versioned module path.
+великих мовних моделей, типізованими PostgreSQL-запитами, валідацією,
+логуванням, колекціями, ідентифікаторами, рядками, рефлексією типів та
+тризначною логікою. Модулі незалежні: ви підключаєте тільки той пакет, який
+потрібен конкретному застосунку, а кожен пакет має власний versioned module
+path.
 
 Поточна група:
 
 `ai` (з драйверами провайдерів `anthropic`, `openai`, `gemini`, `grok`,
 `deepseek`, `openrouter`, `ollama`, `mistral`, `cohere`), `env`, `g`, `is`,
-`key`, `kind`, `log`, `middlewares`, `mux`, `opt`, `qp`, `resp`, `scs`, `set`,
-`slug`, `t13n`, `trit`, `websocket`.
+`key`, `kind`, `log`, `middlewares`, `mux`, `opt`, `pgc`, `qp`, `resp`, `scs`,
+`set`, `slug`, `t13n`, `trit`, `websocket`.
 
 Разом вони закривають “нудні”, але важливі краї прикладного коду: читання
 конфігурації з `.env`, парсинг аргументів командного рядка, перевірку вхідних
@@ -40,6 +41,7 @@
 - [**middlewares** - net/http middleware: request ID, real IP, recovery, логування тощо](#middlewares)
 - [**mux** - ергономічний роутинг поверх net/http.ServeMux](#mux)
 - [**opt** - парсинг CLI-аргументів у структури](#opt)
+- [**pgc** - SQL-запити, скомпільовані в типобезпечний Go для PostgreSQL](#pgc)
 - [**qp** - типізоване читання URL query-параметрів](#qp)
 - [**resp** - HTTP response helpers поверх net/http](#resp)
 - [**scs** - перетворення і визначення стилів рядків](#scs)
@@ -416,6 +418,38 @@ func main() {
 
 **Детальніше:** [github.com/goloop/opt](https://github.com/goloop/opt) · [довідник](https://pkg.go.dev/github.com/goloop/opt/v2)
 
+## pgc
+
+`pgc` компілює анотовані SQL-запити в типобезпечний Go-пакет для PostgreSQL.
+Ти пишеш звичайний SQL поруч із міграціями; pgc питає твою базу розробки, чим
+насправді є кожен параметр і кожна колонка - оракулом типів виступає сам
+сервер, стейтменти готуються й описуються, але ніколи не виконуються - і
+генерує код, який читається як написаний людиною: явні виклики `Scan`, godoc
+на кожному символі, нуль рефлексії в рантаймі. Згенерований пакет імпортує
+лише стандартну бібліотеку (`database/sql`, `context`, `time`), а сам pgc не
+має жодної сторонньої залежності: він говорить wire-протоколом PostgreSQL
+напряму.
+
+```sql
+-- queries/users.sql
+
+-- name: GetUser :one
+-- Returns a single user by primary key.
+SELECT id, email, name, created_at
+FROM users
+WHERE id = $1;
+```
+
+```go
+q := db.New(sqlDB) // згенерований пакет; *sql.DB або *sql.Tx
+
+u, err := q.GetUser(ctx, 42)   // (User, error), типи з живої схеми
+users, err := q.ListUsers(ctx, 10, 0)
+err = q.WithTx(tx).DeleteUser(ctx, u.ID)
+```
+
+**Детальніше:** [github.com/goloop/pgc](https://github.com/goloop/pgc) · [довідник](https://pkg.go.dev/github.com/goloop/pgc)
+
 ## qp
 
 `qp` читає URL query parameters у типізовані Go-значення. Він замінює
@@ -683,7 +717,8 @@ func echo(w http.ResponseWriter, r *http.Request) {
 
 Використовуйте `env` і `opt` на старті програми, `mux`, `middlewares`, `qp` і
 `resp` у HTTP handlers, `websocket` для realtime-з'єднань, `ai` щоб говорити до
-LLM-провайдерів за одним інтерфейсом, `is` для валідації, `log` для operational
+LLM-провайдерів за одним інтерфейсом, `pgc` щоб компілювати свій SQL у
+типізований Go проти PostgreSQL, `is` для валідації, `log` для operational
 output, `set` і `g` у business logic, `key` для публічних reversible IDs, `kind`
 коли парсеру чи декодеру треба інтроспектувати типи, `scs`, `slug` і `t13n` для
 роботи з рядками, а `trit` тоді, коли unknown state є повноцінним значенням.
