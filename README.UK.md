@@ -5,15 +5,18 @@
 📖 [English](README.md) · **Українська**
 
 `goloop` - це група невеликих, сфокусованих Go-модулів для щоденної роботи з
-конфігурацією, CLI, HTTP, роутингом і middleware, WebSocket-з'єднаннями,
-валідацією, логуванням, колекціями, ідентифікаторами, рядками та тризначною
-логікою. Модулі незалежні: ви підключаєте тільки той пакет, який потрібен
-конкретному застосунку, а кожен пакет має власний versioned module path.
+конфігурацією, CLI, HTTP, роутингом і middleware, WebSocket-з'єднаннями, API
+великих мовних моделей, валідацією, логуванням, колекціями, ідентифікаторами,
+рядками, рефлексією типів та тризначною логікою. Модулі незалежні: ви
+підключаєте тільки той пакет, який потрібен конкретному застосунку, а кожен
+пакет має власний versioned module path.
 
 Поточна група:
 
-`env`, `g`, `is`, `key`, `log`, `middlewares`, `mux`, `opt`, `qp`, `resp`,
-`scs`, `set`, `slug`, `t13n`, `trit`, `websocket`.
+`ai` (з драйверами провайдерів `anthropic`, `openai`, `gemini`, `grok`,
+`deepseek`, `openrouter`, `ollama`, `mistral`, `cohere`), `env`, `g`, `is`,
+`key`, `kind`, `log`, `middlewares`, `mux`, `opt`, `qp`, `resp`, `scs`, `set`,
+`slug`, `t13n`, `trit`, `websocket`.
 
 Разом вони закривають “нудні”, але важливі краї прикладного коду: читання
 конфігурації з `.env`, парсинг аргументів командного рядка, перевірку вхідних
@@ -27,10 +30,12 @@
 Перейдіть до потрібного пакета; кожен блок завершується посиланнями на
 репозиторій і довідник.
 
+- [**ai** - один інтерфейс до LLM-API, з драйверами для основних провайдерів](#ai)
 - [**env** - .env файли, process environment і struct mapping](#env)
 - [**g** - generic-хелпери для слайсів, чисел, умов і конвертацій](#g)
 - [**is** - перевірка форматів і значень](#is)
 - [**key** - зворотні короткі ключі для uint64 ID](#key)
+- [**kind** - кешована рефлексія для авторів парсерів і декодерів](#kind)
 - [**log** - рівневе логування у кілька напрямків](#log)
 - [**middlewares** - net/http middleware: request ID, real IP, recovery, логування тощо](#middlewares)
 - [**mux** - ергономічний роутинг поверх net/http.ServeMux](#mux)
@@ -43,6 +48,57 @@
 - [**t13n** - Unicode-to-ASCII транслітерація](#t13n)
 - [**trit** - тризначна логіка: False, Unknown, True](#trit)
 - [**websocket** - WebSocket (RFC 6455): клієнт і сервер](#websocket)
+
+## ai
+
+`ai` - це один провайдер-незалежний інтерфейс до API великих мовних моделей плюс
+спільні типи запиту й відповіді, якими «говорить» кожен драйвер. Як `database/sql`
+зі стандартної бібліотеки з її драйверами, `ai` тримає спільний контракт -
+`Generate` і стрімінговий `Stream`, повідомлення, інструменти й мультимодальні
+частини - а окремий пакет на кожного провайдера його реалізує. Код проти
+інтерфейсу працює з будь-яким провайдером; ендпоінти, яких провайдер не поділяє,
+подаються власними нативними методами драйвера. Кожен драйвер залежить лише від
+`ai`, тож увесь набір без сторонніх залежностей.
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+
+	"github.com/goloop/ai"
+	"github.com/goloop/anthropic"
+)
+
+func main() {
+	var client ai.Client = anthropic.New(os.Getenv("ANTHROPIC_API_KEY"))
+
+	resp, err := client.Generate(context.Background(), &ai.Request{
+		Model:    anthropic.ModelClaudeSonnet5,
+		Messages: []ai.Message{ai.UserText("Привітайся одним словом.")},
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(resp.Text())
+}
+```
+
+Драйвери провайдерів, кожен реалізує `ai.Client` й імпортує лише `ai`:
+
+- **anthropic** - Claude Messages API, батчі й підрахунок токенів - [repo](https://github.com/goloop/anthropic) · [довідник](https://pkg.go.dev/github.com/goloop/anthropic)
+- **openai** - Chat Completions, Responses API, embeddings, зображення й аудіо - [repo](https://github.com/goloop/openai) · [довідник](https://pkg.go.dev/github.com/goloop/openai)
+- **gemini** - Google Gemini `generateContent`, embeddings і підрахунок токенів - [repo](https://github.com/goloop/gemini) · [довідник](https://pkg.go.dev/github.com/goloop/gemini)
+- **grok** - xAI Grok, сумісний із chat-completions, із генерацією зображень - [repo](https://github.com/goloop/grok) · [довідник](https://pkg.go.dev/github.com/goloop/grok)
+- **deepseek** - DeepSeek chat і ланцюг міркувань reasoning-моделі - [repo](https://github.com/goloop/deepseek) · [довідник](https://pkg.go.dev/github.com/goloop/deepseek)
+- **openrouter** - шлюз OpenRouter до багатьох моделей за одним ключем - [repo](https://github.com/goloop/openrouter) · [довідник](https://pkg.go.dev/github.com/goloop/openrouter)
+- **ollama** - локальні моделі через нативний Ollama API - [repo](https://github.com/goloop/ollama) · [довідник](https://pkg.go.dev/github.com/goloop/ollama)
+- **mistral** - Mistral chat, embeddings і fill-in-the-middle - [repo](https://github.com/goloop/mistral) · [довідник](https://pkg.go.dev/github.com/goloop/mistral)
+- **cohere** - Cohere v2 chat, embeddings і rerank - [repo](https://github.com/goloop/cohere) · [довідник](https://pkg.go.dev/github.com/goloop/cohere)
+
+**Детальніше:** [github.com/goloop/ai](https://github.com/goloop/ai) · [довідник](https://pkg.go.dev/github.com/goloop/ai)
 
 ## env
 
@@ -177,6 +233,39 @@ func main() {
 ```
 
 **Детальніше:** [github.com/goloop/key](https://github.com/goloop/key) · [довідник](https://pkg.go.dev/github.com/goloop/key/v2)
+
+## kind
+
+`kind` - кешований шар рефлексії для класифікації Go-значень і типів. Його
+створено для тих, хто пише парсери, декодери й біндери - код, що бере рядок,
+рядок таблиці чи значення конфігу й вкладає його в довільний Go-тип. Замість
+ручного `reflect` («це int? вказівник на структуру? чи реалізує воно
+`TextUnmarshaler` на pointer-receiver? який елемент за цими двома слайсами?») ти
+питаєш один кешований дескриптор пласким словником предикатів, тож парсер можна
+випустити, не живучи всередині `reflect`. Це специфічний інструмент - якщо ти
+ніколи не тягнешся по `reflect`, він тобі не потрібен - але коли тягнешся, він
+прибирає нудну, схильну до помилок половину роботи й кешує аналіз типу, тож
+гарячий цикл парсингу платить за нього один раз на тип.
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/goloop/kind"
+)
+
+func main() {
+	k := kind.Of([]int{1, 2, 3})
+
+	fmt.Println(k.IsSlice())      // true
+	fmt.Println(k.Elem().IsInt()) // true - тип елемента
+	fmt.Println(k.IsAnyInt())     // true - leaf-aware: листок слайса - int
+}
+```
+
+**Детальніше:** [github.com/goloop/kind](https://github.com/goloop/kind) · [довідник](https://pkg.go.dev/github.com/goloop/kind)
 
 ## log
 
@@ -589,10 +678,11 @@ func echo(w http.ResponseWriter, r *http.Request) {
 ## Як обрати
 
 Використовуйте `env` і `opt` на старті програми, `mux`, `middlewares`, `qp` і
-`resp` у HTTP handlers, `websocket` для realtime-з'єднань, `is` для валідації,
-`log` для operational output, `set` і `g` у business logic, `key` для публічних
-reversible IDs, `scs`, `slug` і `t13n` для роботи з рядками, а `trit` тоді, коли
-unknown state є повноцінним значенням.
+`resp` у HTTP handlers, `websocket` для realtime-з'єднань, `ai` щоб говорити до
+LLM-провайдерів за одним інтерфейсом, `is` для валідації, `log` для operational
+output, `set` і `g` у business logic, `key` для публічних reversible IDs, `kind`
+коли парсеру чи декодеру треба інтроспектувати типи, `scs`, `slug` і `t13n` для
+роботи з рядками, а `trit` тоді, коли unknown state є повноцінним значенням.
 
 Кожен модуль навмисно невеликий. Не потрібно приймати всю групу одразу:
 встановлюйте тільки той module, який закриває конкретну задачу перед вами.

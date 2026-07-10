@@ -6,14 +6,17 @@
 
 `goloop` is a group of small, focused Go modules for the everyday work around
 configuration, command-line tools, HTTP handlers, routing and middleware,
-WebSocket connections, validation, logging, collections, identifiers, strings
-and three-valued logic. The modules are independent: you import only the package
-you need, and each package keeps its own versioned module path.
+WebSocket connections, large language model APIs, validation, logging,
+collections, identifiers, strings, type reflection and three-valued logic. The
+modules are independent: you import only the package you need, and each package
+keeps its own versioned module path.
 
 The current group is:
 
-`env`, `g`, `is`, `key`, `log`, `middlewares`, `mux`, `opt`, `qp`, `resp`,
-`scs`, `set`, `slug`, `t13n`, `trit`, `websocket`.
+`ai` (with the provider drivers `anthropic`, `openai`, `gemini`, `grok`,
+`deepseek`, `openrouter`, `ollama`, `mistral`, `cohere`), `env`, `g`, `is`,
+`key`, `kind`, `log`, `middlewares`, `mux`, `opt`, `qp`, `resp`, `scs`, `set`,
+`slug`, `t13n`, `trit`, `websocket`.
 
 Together they cover the boring but important edges of application code: reading
 configuration from `.env` files, parsing CLI arguments, validating user input,
@@ -26,10 +29,12 @@ reversible keys, generic helpers and nullable/unknown boolean logic.
 
 Jump to a package; each section ends with links to its repository and reference.
 
+- [**ai** - one interface for LLM APIs, with drivers for the major providers](#ai)
 - [**env** - .env files, process environment and struct mapping](#env)
 - [**g** - generic helpers for slices, numbers, conditions and conversions](#g)
 - [**is** - format and value validation](#is)
 - [**key** - reversible short keys for uint64 IDs](#key)
+- [**kind** - cached reflection for parser and decoder authors](#kind)
 - [**log** - multi-output leveled logging](#log)
 - [**middlewares** - net/http middleware: request ID, real IP, recovery, logging and more](#middlewares)
 - [**mux** - ergonomic routing over net/http.ServeMux](#mux)
@@ -42,6 +47,57 @@ Jump to a package; each section ends with links to its repository and reference.
 - [**t13n** - Unicode-to-ASCII transliteration](#t13n)
 - [**trit** - three-valued logic: False, Unknown, True](#trit)
 - [**websocket** - RFC 6455 WebSocket client and server](#websocket)
+
+## ai
+
+`ai` is one provider-agnostic interface for large language model APIs, plus the
+shared request and response types every provider driver speaks. Like the
+standard library's `database/sql` with its drivers, `ai` holds the common
+contract - `Generate` and streaming `Stream`, messages, tools and multimodal
+parts - while a separate package per provider implements it. Code written
+against the interface runs on any provider; endpoints a provider does not share
+are exposed as that driver's own native methods. Every driver depends only on
+`ai`, so the whole set stays free of third-party dependencies.
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+
+	"github.com/goloop/ai"
+	"github.com/goloop/anthropic"
+)
+
+func main() {
+	var client ai.Client = anthropic.New(os.Getenv("ANTHROPIC_API_KEY"))
+
+	resp, err := client.Generate(context.Background(), &ai.Request{
+		Model:    anthropic.ModelClaudeSonnet5,
+		Messages: []ai.Message{ai.UserText("Say hello in one word.")},
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(resp.Text())
+}
+```
+
+The provider drivers, each implementing `ai.Client` and importing only `ai`:
+
+- **anthropic** - Claude Messages API, batches and token counting - [repo](https://github.com/goloop/anthropic) · [reference](https://pkg.go.dev/github.com/goloop/anthropic)
+- **openai** - Chat Completions, the Responses API, embeddings, images and audio - [repo](https://github.com/goloop/openai) · [reference](https://pkg.go.dev/github.com/goloop/openai)
+- **gemini** - Google Gemini `generateContent`, embeddings and token counting - [repo](https://github.com/goloop/gemini) · [reference](https://pkg.go.dev/github.com/goloop/gemini)
+- **grok** - xAI Grok, chat-completions compatible, with image generation - [repo](https://github.com/goloop/grok) · [reference](https://pkg.go.dev/github.com/goloop/grok)
+- **deepseek** - DeepSeek chat and the reasoning model's chain-of-thought - [repo](https://github.com/goloop/deepseek) · [reference](https://pkg.go.dev/github.com/goloop/deepseek)
+- **openrouter** - the OpenRouter gateway to many models behind one key - [repo](https://github.com/goloop/openrouter) · [reference](https://pkg.go.dev/github.com/goloop/openrouter)
+- **ollama** - local models over the native Ollama API - [repo](https://github.com/goloop/ollama) · [reference](https://pkg.go.dev/github.com/goloop/ollama)
+- **mistral** - Mistral chat, embeddings and fill-in-the-middle - [repo](https://github.com/goloop/mistral) · [reference](https://pkg.go.dev/github.com/goloop/mistral)
+- **cohere** - Cohere v2 chat, embeddings and rerank - [repo](https://github.com/goloop/cohere) · [reference](https://pkg.go.dev/github.com/goloop/cohere)
+
+**Learn more:** [github.com/goloop/ai](https://github.com/goloop/ai) · [reference](https://pkg.go.dev/github.com/goloop/ai)
 
 ## env
 
@@ -174,6 +230,39 @@ func main() {
 ```
 
 **Learn more:** [github.com/goloop/key](https://github.com/goloop/key) · [reference](https://pkg.go.dev/github.com/goloop/key/v2)
+
+## kind
+
+`kind` is a cached reflection layer for classifying Go values and types. It is
+built for people writing parsers, decoders and binders - the code that takes a
+string, a database row or a config value and pushes it into an arbitrary Go
+type. Instead of hand-rolling `reflect` ("is this an int? a pointer to a struct?
+does it implement `TextUnmarshaler` on a pointer receiver? what is the element
+behind these two slices?"), you ask one cached descriptor with a flat vocabulary
+of predicates, so you can ship a parser without living inside `reflect`. It is a
+specific tool - if you never reach for `reflect`, you do not need it - but when
+you do, it removes the tedious, error-prone half of the job and caches the type
+analysis so a hot parse loop pays for it once per type.
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/goloop/kind"
+)
+
+func main() {
+	k := kind.Of([]int{1, 2, 3})
+
+	fmt.Println(k.IsSlice())      // true
+	fmt.Println(k.Elem().IsInt()) // true - the element type
+	fmt.Println(k.IsAnyInt())     // true - leaf-aware: the slice's leaf is int
+}
+```
+
+**Learn more:** [github.com/goloop/kind](https://github.com/goloop/kind) · [reference](https://pkg.go.dev/github.com/goloop/kind)
 
 ## log
 
@@ -586,10 +675,12 @@ func echo(w http.ResponseWriter, r *http.Request) {
 ## How to choose
 
 Use `env` and `opt` at program startup, `mux`, `middlewares`, `qp` and `resp`
-in HTTP handlers, `websocket` for realtime connections, `is` for validation,
-`log` for operational output, `set` and `g` inside business logic, `key` for
-public reversible IDs, `scs`, `slug` and `t13n` for string processing, and
-`trit` whenever unknown state is a first-class value.
+in HTTP handlers, `websocket` for realtime connections, `ai` to talk to LLM
+providers behind one interface, `is` for validation, `log` for operational
+output, `set` and `g` inside business logic, `key` for public reversible IDs,
+`kind` when a parser or decoder needs to introspect types, `scs`, `slug` and
+`t13n` for string processing, and `trit` whenever unknown state is a
+first-class value.
 
 Each module is intentionally small. You do not need to adopt the whole group:
 install only the module that closes the specific problem in front of you.
