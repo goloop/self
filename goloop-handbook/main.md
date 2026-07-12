@@ -4,34 +4,34 @@
 
 *One solution for Go APIs, one task at a time.*
 
-This is a book, not a reference manual. A reference tells you what every function
-does; this book starts from a task a person actually has - "read my
-configuration", "answer JSON over HTTP", "clean a signup form", "store rows in
-PostgreSQL", "ask a model a question" - and shows a working recipe that solves
-it with GoLoop.
+Welcome. This book helps you build a Go API with GoLoop, starting from what you
+actually need to do: read configuration, answer JSON over HTTP, clean a signup
+form, store rows in PostgreSQL, ask a language model. For each task you get a
+recipe you can read, run and adapt.
 
-Every recipe in this book is a complete, runnable Go program in
-[`recipes/`](recipes/). Each one is built, tested and run before it is written
-about, and the real output of that run is printed in the chapter as an
-**execution report**. When a recipe needs a database or a language model, the
-report is produced against a real one. Nothing here is pseudo-code.
+Every recipe is a complete program in [`recipes/`](recipes/), with its own
+`go.mod`, `main.go` and `main_test.go`. The chapter shows the real output of
+running it, so you see exactly what the code does.
 
-## How to read this book
+## How to use this book
 
 - Read a chapter for the idea; open its recipe directory for the whole program.
-- Every recipe directory has a `go.mod`, a `main.go` and a `main_test.go`. To
-  run one yourself: `cd recipes/<name> && go test ./... && go run .`
-- Chapters are ordered, but independent. Each starts from foundations and
-  builds up. The last part assembles the individual pieces into one service.
-- Every module GoLoop offers is
-  [stdlib-first and mostly zero-dependency](../README.md): you adopt one recipe
-  without adopting the rest.
+- To run a recipe yourself:
+
+  ```sh
+  cd recipes/<name>
+  go test ./...
+  go run .
+  ```
+
+- The chapters are ordered but independent. Part I takes one module at a time;
+  the later parts combine them into a service.
+- You adopt one recipe without adopting the rest: every GoLoop module is a
+  separate, [stdlib-first](../README.md) package with its own version.
 
 ## Contents
 
 ### Part I - One module at a time
-
-Each chapter solves one ordinary problem with the smallest set of modules.
 
 - [01. Configuration you can operate](chapters/01-configuration.md) - `env`, `opt`
   · recipe [`001-configuration`](recipes/001-configuration/)
@@ -40,7 +40,7 @@ Each chapter solves one ordinary problem with the smallest set of modules.
 - [03. Validate and clean user input](chapters/03-validate-and-clean.md) -
   `is`, `norm` · recipe [`003-validate-and-clean`](recipes/003-validate-and-clean/)
 
-### Part II - Data and models *(planned)*
+### Part II - Data and models *(in progress)*
 
 - 04. Typed PostgreSQL with migrations - `pgc`
 - 05. Ask a language model, swap the provider - `ai`, `anthropic`, `openai`
@@ -53,13 +53,10 @@ Each chapter solves one ordinary problem with the smallest set of modules.
 - 09. Real-time with WebSockets - `websocket`
 - 10. Putting it together - one API on the whole GoLoop stack
 
-Part I is written and verified. Parts II and III are on the way; the recipes
-that back them are being built and tested the same way, one at a time.
+## Start here
 
-## The preface
-
-New here? Start with the [preface](chapters/00-preface.md): what GoLoop is, why
-a recipe book, and the one habit that makes the rest of it click.
+New to GoLoop? Begin with the [preface](chapters/00-preface.md), then read Part I
+in order. Already know what you need? Jump straight to the chapter.
 
 ---
 
