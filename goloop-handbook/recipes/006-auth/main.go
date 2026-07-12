@@ -9,7 +9,8 @@
 //	           short public id;
 //	C. session - set and read a signed session cookie;
 //	D. auth  - a short-lived token expires and is then rejected;
-//	E. auth  - a refresh token: store the hash, hand out the opaque secret.
+//	E. auth  - a refresh token: store the hash, hand out the opaque secret;
+//	F. argon2id - memory-hard password hashing via the PasswordHasher interface.
 package main
 
 import (
@@ -19,6 +20,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/goloop/argon2id"
 	"github.com/goloop/auth"
 	"github.com/goloop/key/v2"
 	"github.com/goloop/session"
@@ -124,5 +126,18 @@ func run() error {
 	fmt.Printf("   stored: id=%.8s... hash=%.12s... (no secret)\n", id, record.Hash)
 	fmt.Printf("   verify presented secret: %v\n", record.Verify(presented) == nil)
 	fmt.Printf("   verify wrong secret:     %v\n", record.Verify("deadbeef") == nil)
+
+	// Example F: memory-hard hashing with argon2id. PasswordHasher is an
+	// interface, so argon2id.New() drops in wherever NewPBKDF2 fits - the same
+	// Hash/Verify, but memory-hard, the recommended default for new systems.
+	fmt.Println("F. argon2id password hashing (auth.PasswordHasher, memory-hard):")
+	var strong auth.PasswordHasher = argon2id.New()
+	enc, err := strong.Hash([]byte("correct horse battery staple"))
+	if err != nil {
+		return err
+	}
+	fmt.Printf("   stored hash: %.24s... (memory-hard)\n", enc)
+	fmt.Printf("   verify correct password: %v\n", strong.Verify(enc, []byte("correct horse battery staple")) == nil)
+	fmt.Printf("   verify wrong password:   %v\n", strong.Verify(enc, []byte("guess")) == nil)
 	return nil
 }

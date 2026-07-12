@@ -1,3 +1,5 @@
+github.com/goloop/argon2id v0.1.1 h1:5g6XJCqQXCm5l/Hrw1aFzZg6fMwaQUsLftCK5YFQAjg=
+github.com/goloop/argon2id v0.1.1/go.mod h1:K6CcSXZbhvQkTgradenfkGFMTGohe/FVB9Ij/G3Y4TY=
 github.com/goloop/auth v0.3.0 h1:ATF7gzJXRz5wDIlnIzTJwb6G5uK0jG8il7UQuLcJPPI=
 github.com/goloop/auth v0.3.0/go.mod h1:6iWjvk/whHTM2M5JPtqcuNAelTIbP9QOheKGBtWxMdc=
 github.com/goloop/jwt v0.2.0 h1:P4H0IdFdMwE2UGMKc4IUTqgxjhbYWO4Mw13NQpwvTms=

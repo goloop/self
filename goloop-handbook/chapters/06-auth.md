@@ -11,8 +11,10 @@ this yourself.
 
 **Modules.** [`auth`](https://github.com/goloop/auth) hashes passwords and
 issues tokens (a real JWT via [`jwt`](https://github.com/goloop/jwt)),
-[`session`](https://github.com/goloop/session) manages a signed cookie session,
-and [`key`](https://github.com/goloop/key) mints short public ids.
+[`argon2id`](https://github.com/goloop/argon2id) is the memory-hard password
+hasher behind `auth`'s interface, [`session`](https://github.com/goloop/session)
+manages a signed cookie session, and [`key`](https://github.com/goloop/key) mints
+short public ids.
 
 **Recipe.** [`recipes/006-auth`](../recipes/006-auth/)
 
@@ -101,6 +103,23 @@ id, secret, _ := auth.ParseRefreshToken(opaque) // look the record up by id
 ok := record.Verify(secret) == nil              // true; a wrong secret is false
 ```
 
+## Example F - memory-hard hashing with argon2id
+
+`PasswordHasher` is an interface, and `auth.NewPBKDF2` is only one implementation
+of it. [`argon2id`](https://github.com/goloop/argon2id) is another: a memory-hard
+hasher that costs a fixed amount of RAM per guess, which is what makes a stolen
+hash expensive to crack. `argon2id.New()` has the same `Hash`/`Verify` shape, so
+it drops in without either package importing the other:
+
+```go
+var hasher auth.PasswordHasher = argon2id.New() // memory-hard, recommended
+encoded, _ := hasher.Hash([]byte(password))     // $argon2id$v=19$m=65536,t=1,p=4$...
+ok := hasher.Verify(encoded, []byte(attempt)) == nil
+```
+
+Use PBKDF2 when you want stdlib-only and FIPS-friendly; reach for `argon2id` as
+the default for a new system, where memory-hardness is the stronger guarantee.
+
 ## Execution report
 
 ```text
@@ -128,17 +147,24 @@ E. refresh token (auth NewRefreshToken / ParseRefreshToken):
    stored: id=8ab00e6c... hash=86fb21aba9ac... (no secret)
    verify presented secret: true
    verify wrong secret:     false
+F. argon2id password hashing (auth.PasswordHasher, memory-hard):
+   stored hash: $argon2id$v=19$m=65536,t... (memory-hard)
+   verify correct password: true
+   verify wrong password:   false
 ```
 
 The hash keeps no plaintext and the wrong password fails; the JWT round-trips
 its subject and a single altered character is rejected; the session survives a
 round trip through a cookie; the short-lived token is valid at 10s and rejected
-at 60s; and the refresh token verifies its secret while only its hash is stored.
+at 60s; the refresh token verifies its secret while only its hash is stored; and
+`argon2id.New()` hashes through the very same `PasswordHasher` interface.
 
 ## What you learned
 
 - `auth.NewPBKDF2` hashes and verifies passwords; the digest carries its own
-  algorithm, cost and salt, so `Verify` needs nothing else.
+  algorithm, cost and salt, so `Verify` needs nothing else. `PasswordHasher` is
+  an interface, so `argon2id.New()` (memory-hard) drops in the same way and is
+  the recommended default for a new system.
 - `auth.TokenManager` issues and verifies signed tokens (JWT); a `Subject`
   carries the id, email, roles and scopes. Protect routes with its `Protect`
   middleware (see the whole-stack chapter).
