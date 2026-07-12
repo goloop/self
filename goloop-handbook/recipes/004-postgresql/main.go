@@ -9,11 +9,12 @@
 // The generated package depends only on database/sql, so this program imports
 // no goloop package at all - it just uses the code pgc wrote.
 //
-// Three examples, all against a real database:
+// Four examples, all against a real database:
 //
 //	A. write  - CreateNote inserts and returns a typed Note (INSERT RETURNING);
 //	B. read   - NoteByID, ListNotes and CountNotes return typed rows;
-//	C. search - SearchNotes takes a parameter, and tags round-trips as []string.
+//	C. search - SearchNotes takes a parameter, and tags round-trips as []string;
+//	D. tx     - q.WithTx runs several writes atomically; a rollback undoes them.
 package main
 
 import (
@@ -88,5 +89,52 @@ func run() error {
 	for _, n := range found {
 		fmt.Printf("   match #%d %q tags=%v\n", n.ID, n.Title, n.Tags)
 	}
+
+	// Example D: a transaction. q.WithTx(tx) returns a Queries bound to the
+	// transaction, so several writes either all land or none do. The first tx
+	// commits two notes; the second inserts and then rolls back, and CountNotes
+	// proves the rolled-back rows never existed.
+	fmt.Println("D. transaction (WithTx, commit then rollback):")
+	before := count(ctx, q)
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	qtx := q.WithTx(tx)
+	if _, err := qtx.CreateNote(ctx, "Groceries", "Milk, bread.", []string{"home"}); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	if _, err := qtx.CreateNote(ctx, "Standup", "Blockers and plan.", []string{"work"}); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	fmt.Printf("   committed 2 notes: %d -> %d\n", before, count(ctx, q))
+
+	// Now a transaction we deliberately roll back: the insert is invisible after.
+	rolled := count(ctx, q)
+	tx2, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	if _, err := q.WithTx(tx2).CreateNote(ctx, "Never saved", "Rolled back.", []string{"temp"}); err != nil {
+		_ = tx2.Rollback()
+		return err
+	}
+	_ = tx2.Rollback()
+	fmt.Printf("   after rollback: %d -> %d (unchanged)\n", rolled, count(ctx, q))
 	return nil
+}
+
+// count returns the number of notes, or -1 on error, for the report.
+func count(ctx context.Context, q *store.Queries) int64 {
+	total, err := q.CountNotes(ctx)
+	if err != nil || total == nil {
+		return -1
+	}
+	return *total
 }

@@ -92,6 +92,32 @@ total, _ := q.CountNotes(ctx)     // *int64
 found, _ := q.SearchNotes(ctx, "list") // []Note, each with .Tags []string
 ```
 
+## Example D - a transaction
+
+Some writes must happen together or not at all. `pgc` generates a `WithTx`
+method: `q.WithTx(tx)` returns a `Queries` bound to a `*sql.Tx`, so the same
+typed methods now run inside the transaction. Both `*sql.DB` and `*sql.Tx`
+satisfy the small `DBTX` interface the generated code needs, so there is no
+second set of methods to learn:
+
+```go
+tx, _ := db.BeginTx(ctx, nil)
+qtx := q.WithTx(tx) // the same methods, now inside tx
+
+if _, err := qtx.CreateNote(ctx, "Groceries", "Milk, bread.", []string{"home"}); err != nil {
+	_ = tx.Rollback() // one failure undoes the whole batch
+	return err
+}
+if _, err := qtx.CreateNote(ctx, "Standup", "Blockers and plan.", []string{"work"}); err != nil {
+	_ = tx.Rollback()
+	return err
+}
+_ = tx.Commit() // both notes land together
+```
+
+Roll back instead of committing and the writes vanish: a `CreateNote` inside a
+rolled-back `tx` is never visible, so `CountNotes` is unchanged afterwards.
+
 ## Execution report
 
 Migrations applied, tested against a real PostgreSQL, then run:
@@ -114,11 +140,16 @@ B. read (NoteByID, ListNotes, CountNotes):
 C. search (SearchNotes, parameter + text[] -> []string):
    match #2 "Release checklist" tags=[work]
    match #1 "Reading list" tags=[personal books]
+D. transaction (WithTx, commit then rollback):
+   committed 2 notes: 2 -> 4
+   after rollback: 4 -> 4 (unchanged)
 ```
 
 The insert returned a typed `Note` with the generated id; the reads returned
 `Note` and `[]Note`; the search matched both titles that contain "list"; and
-`tags` moved between Postgres and Go as `[]string` throughout.
+`tags` moved between Postgres and Go as `[]string` throughout. The committed
+transaction added two notes at once (2 -> 4); the rolled-back one left the
+count untouched (4 -> 4), proving the writes were atomic.
 
 ## What you learned
 
@@ -128,6 +159,8 @@ The insert returned a typed `Note` with the generated id; the reads returned
   method and struct. `INSERT ... RETURNING *` becomes a typed write.
 - The generated package uses only `database/sql`; a Postgres `text[]` maps to a
   Go `[]string`.
+- `q.WithTx(tx)` runs the same typed methods inside a `*sql.Tx`: commit and the
+  batch lands together, roll back and it never happened.
 - Because the columns are typed in Go, renaming one in a migration breaks the
   build, not production.
 

@@ -95,6 +95,32 @@ total, _ := q.CountNotes(ctx)     // *int64
 found, _ := q.SearchNotes(ctx, "list") // []Note, кожен зі своїм .Tags []string
 ```
 
+## Приклад D - транзакція
+
+Деякі записи мають статися разом або не статися зовсім. `pgc` генерує метод
+`WithTx`: `q.WithTx(tx)` повертає `Queries`, прив'язаний до `*sql.Tx`, тож ті
+самі типізовані методи тепер працюють усередині транзакції. І `*sql.DB`, і
+`*sql.Tx` задовольняють малий інтерфейс `DBTX`, який потрібен згенерованому
+коду, тож окремого набору методів вчити не треба:
+
+```go
+tx, _ := db.BeginTx(ctx, nil)
+qtx := q.WithTx(tx) // ті самі методи, тепер усередині tx
+
+if _, err := qtx.CreateNote(ctx, "Groceries", "Milk, bread.", []string{"home"}); err != nil {
+	_ = tx.Rollback() // одна помилка скасовує весь пакет
+	return err
+}
+if _, err := qtx.CreateNote(ctx, "Standup", "Blockers and plan.", []string{"work"}); err != nil {
+	_ = tx.Rollback()
+	return err
+}
+_ = tx.Commit() // обидві нотатки лягають разом
+```
+
+Відкотіть замість коміту - і записи зникають: `CreateNote` усередині відкоченої
+`tx` ніколи не стає видимим, тож `CountNotes` після цього незмінний.
+
 ## Звіт виконання
 
 Міграції застосовано, протестовано проти справжнього PostgreSQL, потім запущено:
@@ -117,11 +143,16 @@ B. read (NoteByID, ListNotes, CountNotes):
 C. search (SearchNotes, parameter + text[] -> []string):
    match #2 "Release checklist" tags=[work]
    match #1 "Reading list" tags=[personal books]
+D. transaction (WithTx, commit then rollback):
+   committed 2 notes: 2 -> 4
+   after rollback: 4 -> 4 (unchanged)
 ```
 
 Вставка повернула типізований `Note` зі згенерованим id; читання повернули
 `Note` і `[]Note`; пошук збігся з обома заголовками, що містять «list»; а `tags`
-рухалися між Postgres і Go як `[]string` наскрізь.
+рухалися між Postgres і Go як `[]string` наскрізь. Закомічена транзакція додала
+дві нотатки одразу (2 -> 4); відкочена лишила лічильник недоторканим (4 -> 4),
+доводячи атомарність записів.
 
 ## Що ви дізналися
 
@@ -131,6 +162,8 @@ C. search (SearchNotes, parameter + text[] -> []string):
   структуру. `INSERT ... RETURNING *` стає типізованим записом.
 - Згенерований пакет використовує лише `database/sql`; Postgres `text[]` стає Go
   `[]string`.
+- `q.WithTx(tx)` запускає ті самі типізовані методи всередині `*sql.Tx`: коміт -
+  і пакет лягає разом, відкіт - і його наче не було.
 - Оскільки колонки типізовані в Go, перейменування однієї в міграції ламає
   збірку, а не прод.
 
