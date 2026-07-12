@@ -50,8 +50,30 @@ c.ToPascal("userAPIToken")         // "UserApiToken"
 c.ToScreamingSnake("userAPIToken") // "USER_API_TOKEN"
 ```
 
-(За замовчуванням `scs` не вважає `API` акронімом; увімкніть це через
-`scs.New(scs.WithAcronyms("API"))`, коли хочете `UserAPIToken`.)
+## Приклад D - валідуйте вхідний слаг
+
+Слаг не лише виходить у URL, який ви будуєте; він також повертається, як
+`{slug}` у шляху запиту. `slug.IsValid` відповідає «так/ні», не змінюючи
+значення, тож обробник може відхилити спотворений сегмент ще до того, як той
+торкнеться бази:
+
+```go
+slug.IsValid("hello-world")  // true
+slug.IsValid("Hello World!") // false - пробіли й пунктуація
+slug.IsValid("-bad-")        // false - дефіс на початку/кінці
+```
+
+## Приклад E - тримайте акроніми у верхньому регістрі
+
+За замовчуванням `scs` не знає, що `API` - акронім, тож `userApiToken` стає
+`UserApiToken`. Навчіть його ваших акронімів через `WithAcronyms`, і вони
+лишаться у верхньому регістрі в усіх стилях:
+
+```go
+acr := scs.New(scs.WithAcronyms("API", "ID"))
+acr.ToPascal("userApiToken") // "UserAPIToken" (звичайний scs: "UserApiToken")
+acr.ToPascal("user_id")      // "UserID"       (звичайний scs: "UserId")
+```
 
 ## Звіт виконання
 
@@ -72,21 +94,33 @@ C. naming styles (scs):
      snake="user_api_token" kebab="user-api-token"
      pascal="UserApiToken" camel="userApiToken"
      screaming="USER_API_TOKEN" title="User Api Token"
+D. validate an incoming slug (slug.IsValid):
+   "hello-world"    -> IsValid=true
+   "Hello World!"   -> IsValid=false
+   "-bad-"          -> IsValid=false
+E. acronyms in case conversion (scs WithAcronyms):
+   "userApiToken" -> plain pascal="UserApiToken", acronym pascal="UserAPIToken"
+   "user_id"      -> plain pascal="UserId", acronym pascal="UserID"
 ```
 
 Два заголовки «Getting Started» стали `-2` і `-3`, бо перший був уже зайнятий;
 кириличні заголовки транслітерувалися й потім послагувалися; а один `Caser` дав
-усі стилі іменування з того самого вводу.
+усі стилі іменування з того самого вводу. У D `IsValid` прийняв коректний слаг і
+відхилив два спотворені; у E `WithAcronyms` втримав `API` та `ID` у верхньому
+регістрі там, де звичайний `scs` перевів їх у title-регістр.
 
 ## Що ви дізналися
 
 - `slug.New(slug.WithLowercase())` робить слаги в нижньому регістрі; `MakeUnique`
   тримає їх унікальними проти вашої перевірки «чи зайнято».
+- `slug.IsValid` валідує слаг, що приходить у шляху запиту, тож обробник може
+  відхилити спотворений сегмент рано.
 - `t13n` транслітерує не-латинський текст в ASCII, тож кириличний чи інший
   заголовок отримує справжній слаг, коли ви проганяєте його через `t13n` перед
   `slug`.
 - `scs.Caser` конвертує один ідентифікатор між snake, kebab, camel, Pascal,
-  screaming-snake і title; акроніми налаштовувані.
+  screaming-snake і title; `scs.WithAcronyms` тримає відомі акроніми у верхньому
+  регістрі.
 
 Починається Частина III: запуск цих шматків як сервісу.
 

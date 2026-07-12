@@ -49,8 +49,30 @@ c.ToPascal("userAPIToken")         // "UserApiToken"
 c.ToScreamingSnake("userAPIToken") // "USER_API_TOKEN"
 ```
 
-(By default `scs` does not treat `API` as an acronym; enable that with
-`scs.New(scs.WithAcronyms("API"))` when you want `UserAPIToken`.)
+## Example D - validate an incoming slug
+
+A slug does not only go out in a URL you build; one also comes back in, as the
+`{slug}` in a request path. `slug.IsValid` answers yes/no without changing the
+value, so a handler can reject a malformed segment before it touches the
+database:
+
+```go
+slug.IsValid("hello-world")  // true
+slug.IsValid("Hello World!") // false - spaces and punctuation
+slug.IsValid("-bad-")        // false - leading/trailing dash
+```
+
+## Example E - keep acronyms upper-case
+
+By default `scs` does not know `API` is an acronym, so `userApiToken` becomes
+`UserApiToken`. Teach it the acronyms you use with `WithAcronyms`, and they stay
+upper-case in every style:
+
+```go
+acr := scs.New(scs.WithAcronyms("API", "ID"))
+acr.ToPascal("userApiToken") // "UserAPIToken" (plain scs: "UserApiToken")
+acr.ToPascal("user_id")      // "UserID"       (plain scs: "UserId")
+```
 
 ## Execution report
 
@@ -71,20 +93,32 @@ C. naming styles (scs):
      snake="user_api_token" kebab="user-api-token"
      pascal="UserApiToken" camel="userApiToken"
      screaming="USER_API_TOKEN" title="User Api Token"
+D. validate an incoming slug (slug.IsValid):
+   "hello-world"    -> IsValid=true
+   "Hello World!"   -> IsValid=false
+   "-bad-"          -> IsValid=false
+E. acronyms in case conversion (scs WithAcronyms):
+   "userApiToken" -> plain pascal="UserApiToken", acronym pascal="UserAPIToken"
+   "user_id"      -> plain pascal="UserId", acronym pascal="UserID"
 ```
 
 The two "Getting Started" titles became `-2` and `-3` because the first was
 already taken; the Cyrillic titles transliterated and then slugged; and one
-`Caser` produced every naming style from the same input.
+`Caser` produced every naming style from the same input. In D `IsValid` accepted
+the well-formed slug and rejected the two malformed ones; in E `WithAcronyms`
+kept `API` and `ID` upper-case where plain `scs` title-cased them.
 
 ## What you learned
 
 - `slug.New(slug.WithLowercase())` makes lower-case URL slugs; `MakeUnique`
   keeps them unique against your own "is it taken" check.
+- `slug.IsValid` validates a slug that arrives in a request path, so a handler
+  can reject a malformed segment early.
 - `t13n` transliterates non-Latin text to ASCII, so a Cyrillic or other title
   gets a real slug when you run it through `t13n` before `slug`.
 - `scs.Caser` converts one identifier between snake, kebab, camel, Pascal,
-  screaming-snake and title case; acronyms are configurable.
+  screaming-snake and title case; `scs.WithAcronyms` keeps known acronyms
+  upper-case.
 
 Part III begins: running these pieces as a service.
 

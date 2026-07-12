@@ -6,7 +6,9 @@
 //
 //	A. slug  - a lower-case, unique URL slug;
 //	B. t13n  - transliterate non-Latin text, then slug it;
-//	C. scs   - convert one name between camel, snake, kebab, Pascal and more.
+//	C. scs   - convert one name between camel, snake, kebab, Pascal and more;
+//	D. slug  - validate a slug that arrives from a URL;
+//	E. scs   - keep acronyms upper-case with WithAcronyms.
 package main
 
 import (
@@ -47,5 +49,21 @@ func main() {
 	fmt.Printf("     snake=%q kebab=%q\n", c.ToSnake(name), c.ToKebab(name))
 	fmt.Printf("     pascal=%q camel=%q\n", c.ToPascal(name), c.ToCamel(name))
 	fmt.Printf("     screaming=%q title=%q\n", c.ToScreamingSnake(name), c.ToTitle(name))
+
+	// Example D: validate a slug that arrives from a URL. IsValid answers
+	// yes/no without changing it, so a request for "/posts/{slug}" can 404 a
+	// malformed segment before it ever hits the database.
+	fmt.Println("D. validate an incoming slug (slug.IsValid):")
+	for _, in := range []string{"hello-world", "Hello World!", "-bad-"} {
+		fmt.Printf("   %-16q -> IsValid=%v\n", in, slug.IsValid(in))
+	}
+
+	// Example E: keep known acronyms upper-case. WithAcronyms teaches the Caser
+	// that "API" and "ID" are words, so they are not title-cased into "Api".
+	fmt.Println("E. acronyms in case conversion (scs WithAcronyms):")
+	acr := scs.New(scs.WithAcronyms("API", "ID"))
+	for _, n := range []string{"userApiToken", "user_id"} {
+		fmt.Printf("   %-14q -> plain pascal=%q, acronym pascal=%q\n", n, c.ToPascal(n), acr.ToPascal(n))
+	}
 	os.Exit(0)
 }
