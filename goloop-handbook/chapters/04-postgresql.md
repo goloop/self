@@ -1,4 +1,4 @@
-[« Validate and clean](03-validate-and-clean.md) · [Contents](../main.md) · [Contents »](../main.md)
+[« Validate and clean](03-validate-and-clean.md) · [Contents](../main.md) · [Language models »](05-ai.md)
 
 ---
 
@@ -135,4 +135,4 @@ Part II continues with asking a language model about this data.
 
 ---
 
-[« Validate and clean](03-validate-and-clean.md) · [Contents](../main.md) · [Contents »](../main.md)
+[« Validate and clean](03-validate-and-clean.md) · [Contents](../main.md) · [Language models »](05-ai.md)

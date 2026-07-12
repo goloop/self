@@ -1,4 +1,4 @@
-[« Валідація й чистка](03-validate-and-clean.uk.md) · [Зміст](../main.uk.md) · [Зміст »](../main.uk.md)
+[« Валідація й чистка](03-validate-and-clean.uk.md) · [Зміст](../main.uk.md) · [Мовні моделі »](05-ai.uk.md)
 
 ---
 
@@ -138,4 +138,4 @@ C. search (SearchNotes, parameter + text[] -> []string):
 
 ---
 
-[« Валідація й чистка](03-validate-and-clean.uk.md) · [Зміст](../main.uk.md) · [Зміст »](../main.uk.md)
+[« Валідація й чистка](03-validate-and-clean.uk.md) · [Зміст](../main.uk.md) · [Мовні моделі »](05-ai.uk.md)

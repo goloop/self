@@ -45,7 +45,8 @@
 
 - [04. Типобезпечний PostgreSQL з міграціями](chapters/04-postgresql.uk.md) -
   `pgc` · рецепт [`004-postgresql`](recipes/004-postgresql/)
-- 05. Запитати мовну модель, змінити провайдера - `ai`, `anthropic`, `openai`
+- [05. Запитати мовну модель, змінити провайдера](chapters/05-ai.uk.md) -
+  `ai`, `anthropic`, `openai` · рецепт [`005-ai`](recipes/005-ai/)
 - 06. Сесії, токени й паролі - `auth`, `jwt`, `session`, `key`
 - 07. Слаги, транслітерація й регістри - `slug`, `t13n`, `scs`
 
