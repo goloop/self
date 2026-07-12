@@ -1,0 +1,8 @@
+github.com/goloop/auth v0.3.0 h1:ATF7gzJXRz5wDIlnIzTJwb6G5uK0jG8il7UQuLcJPPI=
+github.com/goloop/auth v0.3.0/go.mod h1:6iWjvk/whHTM2M5JPtqcuNAelTIbP9QOheKGBtWxMdc=
+github.com/goloop/jwt v0.2.0 h1:P4H0IdFdMwE2UGMKc4IUTqgxjhbYWO4Mw13NQpwvTms=
+github.com/goloop/jwt v0.2.0/go.mod h1:fGj5uWlhx4GVoiEbPTDGIlEDWHoKM0gTyZOrAkcGOow=
+github.com/goloop/key/v2 v2.1.0 h1:AnNZuOi8JcjoFgTs9v6githb9/bZxKYT15qB9ehUz+U=
+github.com/goloop/key/v2 v2.1.0/go.mod h1:ot4b0RkH1kErPsDvrLrl1ZIJfEZGsP6Cfu1cjU6dpKs=
+github.com/goloop/session v0.2.0 h1:BAugssKd+w23Y1Wnxrtx/CY4TNK3zZn/PYTKWrpsdX4=
+github.com/goloop/session v0.2.0/go.mod h1:81ebXWzrN4HJu+bZ9Kl5SgyxeL9MqYrVzH2y919hurs=
