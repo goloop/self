@@ -1,4 +1,4 @@
-[« JSON HTTP API](02-http-json-api.md) · [Contents](../main.md) · [Contents »](../main.md)
+[« JSON HTTP API](02-http-json-api.md) · [Contents](../main.md) · [PostgreSQL »](04-postgresql.md)
 
 ---
 
@@ -117,4 +117,4 @@ in PostgreSQL and asking a language model about it.
 
 ---
 
-[« JSON HTTP API](02-http-json-api.md) · [Contents](../main.md) · [Contents »](../main.md)
+[« JSON HTTP API](02-http-json-api.md) · [Contents](../main.md) · [PostgreSQL »](04-postgresql.md)

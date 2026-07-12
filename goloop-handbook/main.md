@@ -42,7 +42,8 @@ running it, so you see exactly what the code does.
 
 ### Part II - Data and models *(in progress)*
 
-- 04. Typed PostgreSQL with migrations - `pgc`
+- [04. Typed PostgreSQL with migrations](chapters/04-postgresql.md) - `pgc`
+  · recipe [`004-postgresql`](recipes/004-postgresql/)
 - 05. Ask a language model, swap the provider - `ai`, `anthropic`, `openai`
 - 06. Sessions, tokens and passwords - `auth`, `jwt`, `session`, `key`
 - 07. Slugs, transliteration and cases - `slug`, `t13n`, `scs`

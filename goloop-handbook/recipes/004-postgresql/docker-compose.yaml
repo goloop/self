@@ -1,0 +1,12 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: book
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: book
+    ports: ["127.0.0.1:5440:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U book -d book"]
+      interval: 1s
+      retries: 30

@@ -1,4 +1,4 @@
-[« JSON HTTP API](02-http-json-api.uk.md) · [Зміст](../main.uk.md) · [Зміст »](../main.uk.md)
+[« JSON HTTP API](02-http-json-api.uk.md) · [Зміст](../main.uk.md) · [PostgreSQL »](04-postgresql.uk.md)
 
 ---
 
@@ -119,4 +119,4 @@ PostgreSQL і запитів до мовної моделі про них.
 
 ---
 
-[« JSON HTTP API](02-http-json-api.uk.md) · [Зміст](../main.uk.md) · [Зміст »](../main.uk.md)
+[« JSON HTTP API](02-http-json-api.uk.md) · [Зміст](../main.uk.md) · [PostgreSQL »](04-postgresql.uk.md)
