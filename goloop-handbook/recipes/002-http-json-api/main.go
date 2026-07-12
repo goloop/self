@@ -1,24 +1,28 @@
 // Recipe 002: a small JSON HTTP API.
 //
-// Three examples of the same three modules:
+// Four examples over a handful of small modules:
 //
 //	A. routing + JSON  - GET /health and GET /users/{id}, with a clean 404;
 //	B. CRUD statuses   - POST returns 201 Created + Location, DELETE returns 204;
-//	C. your middleware - a custom wrapper dropped into the standard chain.
+//	C. your middleware - a custom wrapper dropped into the standard chain;
+//	D. query params    - GET /users?limit=&offset=&q=, read and bounded with qp.
 //
 // The modules: mux routes (net/http patterns), resp writes JSON and errors,
-// middlewares is the chain of func(http.Handler) http.Handler wrappers.
+// qp reads query parameters, middlewares is the chain of wrappers.
 package main
 
 import (
 	"encoding/json"
 	"net/http"
+	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/goloop/middlewares"
 	"github.com/goloop/mux"
+	"github.com/goloop/qp/v2"
 	"github.com/goloop/resp/v2"
 )
 
@@ -40,6 +44,34 @@ func newStore() *store {
 	return &store{next: 2, rows: map[int]user{1: {ID: 1, Name: "Ada", Email: "ada@example.com"}}}
 }
 
+// list returns users filtered by a name substring and paged with limit/offset,
+// in a stable order.
+func (s *store) list(limit, offset int, q string) []user {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	ids := make([]int, 0, len(s.rows))
+	for id := range s.rows {
+		ids = append(ids, id)
+	}
+	sort.Ints(ids)
+	var out []user
+	for _, id := range ids {
+		u := s.rows[id]
+		if q != "" && !strings.Contains(strings.ToLower(u.Name), strings.ToLower(q)) {
+			continue
+		}
+		out = append(out, u)
+	}
+	if offset > len(out) {
+		offset = len(out)
+	}
+	out = out[offset:]
+	if limit < len(out) {
+		out = out[:limit]
+	}
+	return out
+}
+
 // newRouter builds the routes. mux is a thin, standard-library router: the
 // patterns are exactly net/http.ServeMux patterns ("GET /path/{id}"), and the
 // Router is itself an http.Handler.
@@ -57,6 +89,22 @@ func newRouter(s *store) http.Handler {
 			return
 		}
 		_ = resp.JSON(w, u)
+	})
+
+	// Example D: query parameters, read and validated with qp. limit and offset
+	// page the list; q filters by name. qp applies the default and the range:
+	// a missing, empty, or out-of-range value is rejected and replaced by the
+	// default, so a bad value never reaches your code.
+	r.Get("/users", func(w http.ResponseWriter, req *http.Request) {
+		q := qp.New(req.URL)
+		limit := q.Int("limit", qp.Default(20), qp.Between(1, 100))
+		offset := q.Int("offset", qp.Default(0), qp.Min(0))
+		name := q.String("q")
+		_ = resp.JSON(w, resp.R{
+			"users":  s.list(limit, offset, name),
+			"limit":  limit,
+			"offset": offset,
+		})
 	})
 
 	// Example B: the right status code for each write. resp.Created sends 201

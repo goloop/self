@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -59,5 +60,46 @@ func TestWriteStatuses(t *testing.T) {
 	}
 	if rec.Body.Len() != 0 {
 		t.Fatalf("204 body not empty: %q", rec.Body.String())
+	}
+}
+
+// TestListWithQueryParams covers example D: qp reads and bounds limit/offset and
+// filters by q.
+func TestListWithQueryParams(t *testing.T) {
+	s := newStore()
+	s.add(user{Name: "Grace", Email: "grace@example.com"})
+	s.add(user{Name: "Alan", Email: "alan@example.com"})
+	h := newRouter(s)
+
+	// A valid in-range limit is honored: limit=2 returns two rows.
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/users?limit=2", nil))
+	var out struct {
+		Users []user `json:"users"`
+		Limit int    `json:"limit"`
+	}
+	_ = json.Unmarshal(rec.Body.Bytes(), &out)
+	if out.Limit != 2 || len(out.Users) != 2 {
+		t.Errorf("limit=2 -> limit %d, users %d; want 2 and 2", out.Limit, len(out.Users))
+	}
+
+	// An out-of-range limit is rejected and falls back to the default (20), not
+	// clamped: qp.Between drops the bad value rather than truncating it.
+	rec = httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/users?limit=999", nil))
+	_ = json.Unmarshal(rec.Body.Bytes(), &out)
+	if out.Limit != 20 {
+		t.Errorf("limit=999 -> %d, want default 20", out.Limit)
+	}
+	if len(out.Users) != 3 {
+		t.Errorf("users = %d, want 3", len(out.Users))
+	}
+
+	// q filters by name substring, case-insensitively.
+	rec = httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/users?q=gra", nil))
+	_ = json.Unmarshal(rec.Body.Bytes(), &out)
+	if len(out.Users) != 1 || out.Users[0].Name != "Grace" {
+		t.Errorf("q filter = %+v", out.Users)
 	}
 }

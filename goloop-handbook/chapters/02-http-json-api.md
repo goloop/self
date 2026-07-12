@@ -4,15 +4,17 @@
 
 # 02. A JSON HTTP API without a framework
 
-**Task.** Serve JSON over HTTP: route requests, read path parameters, return the
-right status codes for reads and writes, and wrap everything in the usual
-cross-cutting concerns (a request id, panic recovery, logging, security
-headers) - plus one of your own - without adopting a web framework.
+**Task.** Serve JSON over HTTP: route requests, read path parameters and query
+parameters, return the right status codes for reads and writes, and wrap
+everything in the usual cross-cutting concerns (a request id, panic recovery,
+logging, security headers) - plus one of your own - without adopting a web
+framework.
 
 **Modules.** [`mux`](https://github.com/goloop/mux) routes (a thin layer over
 `net/http.ServeMux`), [`resp`](https://github.com/goloop/resp) writes JSON and
-error responses, [`middlewares`](https://github.com/goloop/middlewares) is the
-chain of `func(http.Handler) http.Handler` wrappers.
+error responses, [`qp`](https://github.com/goloop/qp) reads and validates query
+parameters, [`middlewares`](https://github.com/goloop/middlewares) is the chain
+of `func(http.Handler) http.Handler` wrappers.
 
 **Recipe.** [`recipes/002-http-json-api`](../recipes/002-http-json-api/)
 
@@ -93,6 +95,33 @@ return middlewares.Handler(r,
 )
 ```
 
+## Example D - query parameters, read and validated
+
+A list endpoint needs paging and a filter, and those come in the query string:
+`GET /users?limit=2&offset=0&q=ada`. `qp` reads each parameter with a type, a
+default, and a constraint, so a missing or malformed value never reaches your
+handler:
+
+```go
+r.Get("/users", func(w http.ResponseWriter, req *http.Request) {
+	q := qp.New(req.URL)
+	limit := q.Int("limit", qp.Default(20), qp.Between(1, 100))
+	offset := q.Int("offset", qp.Default(0), qp.Min(0))
+	name := q.String("q")
+	_ = resp.JSON(w, resp.R{
+		"users":  s.list(limit, offset, name),
+		"limit":  limit,
+		"offset": offset,
+	})
+})
+```
+
+`qp.Default(v)` is the fallback when the parameter is absent, empty, or invalid.
+`qp.Between(1, 100)` and `qp.Min(0)` are constraints: a value outside the range
+is *rejected*, not clamped - `qp` drops it and returns the default. So
+`limit=999` does not become `100`; it becomes the default `20`. Your handler
+receives a value it can trust and never has to re-check the bounds.
+
 ## Execution report
 
 Tested with `httptest`, then deployed and hit with `curl`:
@@ -119,11 +148,22 @@ HTTP 204 bytes=0
 
 $ curl -w 'HTTP %{http_code}\n' localhost:8081/users/1   # after the delete
 HTTP 404
+
+$ curl -s 'localhost:8081/users?limit=2'
+{"limit":2,"offset":0,"users":[{"id":1,...},{"id":2,...}]}
+
+$ curl -s 'localhost:8081/users?q=gra'                   # name filter
+{"limit":20,"offset":0,"users":[{"id":2,"name":"Grace",...}]}
+
+$ curl -s 'localhost:8081/users?limit=999'               # out of range
+{"limit":20,...}                                         # rejected -> default 20
 ```
 
 Every response carries the security header, the request id and your
 `X-Api-Version`. The create returns `201` with `Location: /users/2`; the delete
-returns `204` with no body; and the deleted user is then `404`.
+returns `204` with no body; and the deleted user is then `404`. The list honors
+`limit=2` and the `q` filter, and rejects `limit=999` back to the default `20`
+rather than clamping it.
 
 ## What you learned
 
@@ -131,6 +171,9 @@ returns `204` with no body; and the deleted user is then `404`.
   `http.Handler`.
 - `resp.JSON`/`resp.R`/`resp.Error` cover reads; `resp.Created` (201 +
   Location) and `resp.NoContent` (204) cover writes.
+- `qp.New(req.URL)` reads query parameters with a type, a `Default`, and
+  constraints (`Between`, `Min`); an out-of-range value is rejected and replaced
+  by the default, not clamped.
 - `middlewares.Handler(h, ...)` stacks concerns; your own middleware is just a
   `func(http.Handler) http.Handler` in the same list.
 - Test with `httptest`; the recipe does that and a live `curl`.

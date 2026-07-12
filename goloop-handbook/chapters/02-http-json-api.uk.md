@@ -5,14 +5,15 @@
 # 02. JSON HTTP API без фреймворка
 
 **Задача.** Віддавати JSON по HTTP: маршрутизувати запити, читати параметри
-шляху, повертати правильні статус-коди для читань і записів, і загорнути все у
-звичні наскрізні турботи (request id, відновлення після паніки, логування,
-security-заголовки) плюс одну свою - не беручи веб-фреймворк.
+шляху й параметри запиту, повертати правильні статус-коди для читань і записів,
+і загорнути все у звичні наскрізні турботи (request id, відновлення після
+паніки, логування, security-заголовки) плюс одну свою - не беручи веб-фреймворк.
 
 **Модулі.** [`mux`](https://github.com/goloop/mux) маршрутизує (тонкий шар над
 `net/http.ServeMux`), [`resp`](https://github.com/goloop/resp) пише JSON- і
-error-відповіді, [`middlewares`](https://github.com/goloop/middlewares) - це
-ланцюжок обгорток `func(http.Handler) http.Handler`.
+error-відповіді, [`qp`](https://github.com/goloop/qp) читає й валідує параметри
+запиту, [`middlewares`](https://github.com/goloop/middlewares) - це ланцюжок
+обгорток `func(http.Handler) http.Handler`.
 
 **Рецепт.** [`recipes/002-http-json-api`](../recipes/002-http-json-api/)
 
@@ -91,6 +92,33 @@ return middlewares.Handler(r,
 )
 ```
 
+## Приклад D - параметри запиту, читання й валідація
+
+Ендпоінту-списку потрібні пагінація й фільтр, а вони приходять у query-рядку:
+`GET /users?limit=2&offset=0&q=ada`. `qp` читає кожен параметр із типом,
+значенням за замовчуванням і обмеженням, тож відсутнє чи хибне значення ніколи
+не доходить до вашого обробника:
+
+```go
+r.Get("/users", func(w http.ResponseWriter, req *http.Request) {
+	q := qp.New(req.URL)
+	limit := q.Int("limit", qp.Default(20), qp.Between(1, 100))
+	offset := q.Int("offset", qp.Default(0), qp.Min(0))
+	name := q.String("q")
+	_ = resp.JSON(w, resp.R{
+		"users":  s.list(limit, offset, name),
+		"limit":  limit,
+		"offset": offset,
+	})
+})
+```
+
+`qp.Default(v)` - запасне значення, коли параметр відсутній, порожній або
+некоректний. `qp.Between(1, 100)` і `qp.Min(0)` - обмеження: значення поза
+діапазоном *відкидається*, а не обрізається - `qp` прибирає його й повертає
+default. Тож `limit=999` не стає `100`; він стає default `20`. Ваш обробник
+отримує значення, якому можна довіряти, і йому не треба перевіряти межі знову.
+
 ## Звіт виконання
 
 Протестовано через `httptest`, потім розгорнуто й перевірено `curl`:
@@ -117,11 +145,21 @@ HTTP 204 bytes=0
 
 $ curl -w 'HTTP %{http_code}\n' localhost:8081/users/1   # після видалення
 HTTP 404
+
+$ curl -s 'localhost:8081/users?limit=2'
+{"limit":2,"offset":0,"users":[{"id":1,...},{"id":2,...}]}
+
+$ curl -s 'localhost:8081/users?q=gra'                   # фільтр за іменем
+{"limit":20,"offset":0,"users":[{"id":2,"name":"Grace",...}]}
+
+$ curl -s 'localhost:8081/users?limit=999'               # поза діапазоном
+{"limit":20,...}                                         # відкинуто -> default 20
 ```
 
 Кожна відповідь несе security-заголовок, request id і ваш `X-Api-Version`.
 Створення повертає `201` із `Location: /users/2`; видалення - `204` без тіла; а
-видалений користувач потім `404`.
+видалений користувач потім `404`. Список шанує `limit=2` і фільтр `q`, а
+`limit=999` відкидає назад до default `20`, а не обрізає.
 
 ## Що ви дізналися
 
@@ -129,6 +167,9 @@ HTTP 404
   `http.Handler`.
 - `resp.JSON`/`resp.R`/`resp.Error` покривають читання; `resp.Created` (201 +
   Location) і `resp.NoContent` (204) покривають записи.
+- `qp.New(req.URL)` читає параметри запиту з типом, `Default` і обмеженнями
+  (`Between`, `Min`); значення поза діапазоном відкидається й замінюється на
+  default, а не обрізається.
 - `middlewares.Handler(h, ...)` складає турботи; ваш власний middleware - це
   просто `func(http.Handler) http.Handler` у тому самому списку.
 - Тестуйте через `httptest`; рецепт робить це й живий `curl`.
