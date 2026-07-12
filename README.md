@@ -8,26 +8,178 @@
 configuration, command-line tools, HTTP handlers, routing and middleware,
 WebSocket connections, large language model APIs, typed PostgreSQL queries,
 validation, logging, collections, identifiers, strings, type reflection and
-three-valued logic. The modules are independent: you import only the package
-you need, and each package keeps its own versioned module path.
+three-valued logic - plus a thin application layer (service lifecycle, health
+endpoints, authentication, sessions and email) that builds on those pieces. The
+modules are independent: you import only the package you need, and each package
+keeps its own versioned module path.
+
+The group has two layers. A **foundation layer** of independent, mostly
+zero-dependency utilities, and a small **application layer** that composes them
+into the recurring parts of a network service. New to goloop? Read
+[Building a service](#building-a-service) first for the whole picture, then dip
+into the per-module reference below.
 
 The current group is:
 
-`ai` (with the provider drivers `anthropic`, `openai`, `gemini`, `grok`,
-`deepseek`, `openrouter`, `ollama`, `mistral`, `cohere`), `env`, `g`, `is`,
-`key`, `kind`, `log`, `middlewares`, `mux`, `opt`, `pgc`, `qp`, `resp`, `scs`,
-`set`, `slug`, `t13n`, `trit`, `websocket`.
+- **Foundation:** `ai` (with the provider drivers `anthropic`, `openai`,
+  `gemini`, `grok`, `deepseek`, `openrouter`, `ollama`, `mistral`, `cohere`),
+  `env`, `g`, `is`, `key`, `kind`, `log`, `middlewares`, `mux`, `opt`, `pgc`,
+  `qp`, `resp`, `scs`, `set`, `slug`, `t13n`, `trit`, `websocket`.
+- **Application:** `app`, `observe`, `jwt`, `auth`, `session`, `mail`, `cli`.
 
 Together they cover the boring but important edges of application code: reading
 configuration from `.env` files, parsing CLI arguments, validating user input,
 reading query parameters, routing requests, chaining middleware, writing HTTP
 responses, speaking the WebSocket protocol, producing logs, converting string
 styles, building slugs, transliterating Unicode text, working with sets, short
-reversible keys, generic helpers and nullable/unknown boolean logic.
+reversible keys, generic helpers and nullable/unknown boolean logic - and then
+running a service with an ordered start/stop lifecycle, health and readiness
+probes, signed tokens and cookie sessions, and outbound email.
+
+## What goloop means
+
+GoLoop is a stdlib-first Go toolkit. It does not try to replace Go's standard
+library or hide it behind a framework. Each module keeps the standard library
+as the default vocabulary, then adds the small missing layer that application
+code would otherwise rewrite in every project.
+
+The design rules are practical:
+
+- **Small modules, clear ownership.** A package should solve one ordinary
+  problem well: environment config, options, responses, routing, validation,
+  logging, WebSocket, generated PostgreSQL queries, and so on.
+- **Explicit behavior.** Public APIs should make control flow, errors and data
+  movement visible. Generated code should look like code a careful Go developer
+  would write by hand.
+- **Stdlib first.** Prefer `net/http`, `database/sql`, `log/slog`, `context`,
+  `encoding/json`, `iter`, `slices`, `maps`, `cmp` and other standard packages
+  over custom runtime abstractions.
+- **Zero dependencies by default.** A module may depend on another GoLoop
+  module when that is the point of the design, but third-party dependencies are
+  exceptional and must pay for themselves.
+- **No framework lock-in.** Use one module without adopting the rest. Generated
+  code should not require a GoLoop runtime package unless that dependency is the
+  feature being requested.
+- **Measured quality.** Keep hot paths allocation-aware, race-clean and covered
+  by tests. Benchmarks are private engineering tools, not marketing.
+- **Boring surface, strong internals.** The best GoLoop package feels obvious
+  from the outside, even when it contains protocol work, parsing, caching or
+  code generation inside.
+
+In short: GoLoop is for applications that want explicit Go, standard-library
+interfaces, small focused packages and production-grade edges without adopting a
+large framework.
+
+This philosophy is why `pgc` generates plain `database/sql` code instead of a
+runtime ORM, why `websocket` implements RFC 6455 without pulling a framework,
+why `mux` builds on `net/http.ServeMux`, and why provider packages such as
+`anthropic` or `openai` expose native APIs while sharing only the small `ai`
+contract where it is useful.
+
+## Building a service
+
+This is the part to read first. The modules are independent, but they are
+designed to slot together in a predictable order. A typical goloop service is
+assembled in layers, each one closing a specific gap the standard library
+leaves open:
+
+| Stage | Modules | What they do |
+|-------|---------|--------------|
+| **Configuration** | `env`, `opt` | Read `.env`/environment into a typed config struct; parse CLI flags. |
+| **Lifecycle** | `app` | Own the ordered start/stop sequence and graceful shutdown so `main` does not. |
+| **HTTP edge** | `mux`, `middlewares` | Route requests over `net/http.ServeMux`; add request IDs, real IP, recovery, logging, CORS. |
+| **Handlers** | `qp`, `resp`, `is` | Read typed query parameters, validate input, write JSON/other responses. |
+| **Identity** | `auth`, `jwt`, `session` | Hash passwords, issue and verify tokens, protect routes, keep browser sessions. |
+| **Data** | `pgc` | Compile SQL into type-safe Go against PostgreSQL. |
+| **Realtime / AI** | `websocket`, `ai` | Speak RFC 6455; call LLM providers behind one interface. |
+| **Observability** | `observe`, `log` | Expose `/healthz` and `/readyz`; produce operational logs. |
+| **Scaffolding** | `cli` | A command-line tool that generates and inspects goloop-first projects. |
+
+The dependency direction is one-way: the application layer imports the
+foundation, never the reverse. `app` knows nothing about HTTP or health; `mux`
+knows nothing about the lifecycle; `observe` never imports `app`. You bridge
+them in your own wiring code, which keeps every module independently usable and
+independently testable.
+
+A minimal but complete service wires configuration, lifecycle, routing,
+middleware, health and responses together:
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+	"log/slog"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/goloop/app"
+	"github.com/goloop/env/v2"
+	"github.com/goloop/middlewares"
+	"github.com/goloop/mux"
+	"github.com/goloop/observe"
+	"github.com/goloop/resp/v2"
+)
+
+type Config struct {
+	Addr string `env:"ADDR" def:":8080"`
+}
+
+func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
+	// 1. Configuration from the environment.
+	var cfg Config
+	if err := env.Unmarshal(&cfg); err != nil {
+		return err
+	}
+
+	// 2. Health and readiness probes (observe never imports the lifecycle).
+	obs := observe.New(observe.WithService("api"))
+	obs.Check("self", func(context.Context) error { return nil })
+
+	// 3. Routes over net/http.ServeMux, then a middleware chain.
+	r := mux.New()
+	r.Get("/healthz", obs.HealthHandler().ServeHTTP)
+	r.Get("/readyz", obs.ReadyHandler().ServeHTTP)
+	r.Get("/hello", func(w http.ResponseWriter, _ *http.Request) {
+		_ = resp.JSON(w, resp.R{"message": "hello"})
+	})
+	handler := middlewares.Chain(
+		middlewares.RequestID(),
+		middlewares.RealIP(),
+		middlewares.Recoverer(),
+		middlewares.Logger(),
+	)(r)
+
+	// 4. Lifecycle: ordered start, signal-aware wait, graceful shutdown.
+	a := app.New("api",
+		app.WithLogger(slog.New(slog.NewTextHandler(os.Stdout, nil))),
+		app.WithShutdownTimeout(10*time.Second),
+	)
+	a.Use(app.HTTPServer("http", &http.Server{Addr: cfg.Addr, Handler: handler}))
+	return a.Run(context.Background())
+}
+```
+
+Add identity by issuing tokens with `auth` (which signs HS256 JWTs through
+`jwt`) and guarding routes with its bearer middleware, or keep browser state in
+a signed cookie with `session`; send transactional email with `mail`; reach a
+database with `pgc`. Each is a separate import you add only when you need it -
+nothing above requires the rest of the group.
 
 ## Contents
 
 Jump to a package; each section ends with links to its repository and reference.
+See [Building a service](#building-a-service) for how they fit together.
+
+**Foundation**
 
 - [**ai** - one interface for LLM APIs, with drivers for the major providers](#ai)
 - [**env** - .env files, process environment and struct mapping](#env)
@@ -38,6 +190,7 @@ Jump to a package; each section ends with links to its repository and reference.
 - [**log** - multi-output leveled logging](#log)
 - [**middlewares** - net/http middleware: request ID, real IP, recovery, logging and more](#middlewares)
 - [**mux** - ergonomic routing over net/http.ServeMux](#mux)
+- [**norm** - normalize user input to canonical form and validate](#norm)
 - [**opt** - command-line argument parsing into structs](#opt)
 - [**pgc** - SQL queries compiled into type-safe Go for PostgreSQL](#pgc)
 - [**qp** - typed URL query parameter parsing](#qp)
@@ -48,6 +201,16 @@ Jump to a package; each section ends with links to its repository and reference.
 - [**t13n** - Unicode-to-ASCII transliteration](#t13n)
 - [**trit** - three-valued logic: False, Unknown, True](#trit)
 - [**websocket** - RFC 6455 WebSocket client and server](#websocket)
+
+**Application**
+
+- [**app** - service lifecycle: ordered start/stop and graceful shutdown](#app)
+- [**observe** - health, readiness and build-info endpoints](#observe)
+- [**jwt** - compact HS256 JSON Web Tokens](#jwt)
+- [**auth** - password hashing, access tokens and bearer middleware](#auth)
+- [**session** - signed-cookie sessions for browser apps](#session)
+- [**mail** - build and send outbound email over SMTP](#mail)
+- [**cli** - scaffold and inspect goloop-first projects](#cli)
 
 ## ai
 
@@ -179,8 +342,8 @@ a JWT, a numeric string, a valid latitude, a variable name, and so on.
 
 The package validates the input as given; it is not a sanitizer or normalizer.
 That distinction is important in HTTP handlers and forms: normalize data first
-if your application needs normalization, then call `is.*` to check whether the
-result matches the expected format or rule.
+if your application needs normalization (see [norm](#norm)), then call `is.*` to
+check whether the result matches the expected format or rule.
 
 ```go
 package main
@@ -375,6 +538,37 @@ func main() {
 ```
 
 **Learn more:** [github.com/goloop/mux](https://github.com/goloop/mux) · [reference](https://pkg.go.dev/github.com/goloop/mux)
+
+## norm
+
+`norm` is the writing companion to `is`: where `is` reads (is this an email?),
+`norm` cleans a value toward the canonical form of that type and then validates
+it. Each function returns the normalized value and whether it is valid, so a
+form handler can accept slightly messy input and store a clean result. It covers
+email, URL, UUID, MAC, IBAN, bank card, phone, IP and more, and adds a Unicode
+character toolkit for trimming and stripping invisible or control characters.
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/goloop/norm"
+)
+
+func main() {
+	fmt.Println(norm.Email("  Example @ Gmail.com ")) // Example@gmail.com true
+
+	iban, ok := norm.IBAN("de89 3704 0044 0532 0130 00")
+	fmt.Println(iban, ok) // DE89370400440532013000 true
+
+	// Clean strips invisible/control characters and collapses whitespace.
+	fmt.Printf("%q\n", norm.Clean("  ragged   name  ")) // "ragged name"
+}
+```
+
+**Learn more:** [github.com/goloop/norm](https://github.com/goloop/norm) · [reference](https://pkg.go.dev/github.com/goloop/norm)
 
 ## opt
 
@@ -708,6 +902,259 @@ func echo(w http.ResponseWriter, r *http.Request) {
 
 **Learn more:** [github.com/goloop/websocket](https://github.com/goloop/websocket) · [reference](https://pkg.go.dev/github.com/goloop/websocket)
 
+## app
+
+`app` is a small lifecycle and composition kernel: it owns the start/stop
+sequence of a service so your `main` does not repeat it. You register
+components - anything with a `Name`, a non-blocking `Start` and a `Stop` - and
+`app` starts them in order, waits for a signal, parent cancellation or a fatal
+component error, then stops them in reverse order within a bounded timeout.
+
+It is not a framework: no global state, no dependency-injection container, no
+routing. Ready-made components cover the usual cases - `HTTPServer` wraps an
+`*http.Server`, `Worker` wraps a blocking loop, `Closer` wraps a cleanup
+function - and it exposes a read-only status snapshot that an observability
+module can turn into a health check without either package importing the other.
+
+```go
+package main
+
+import (
+	"context"
+	"net/http"
+	"time"
+
+	"github.com/goloop/app"
+)
+
+func main() {
+	a := app.New("api", app.WithShutdownTimeout(10*time.Second))
+	a.Use(app.HTTPServer("http", &http.Server{Addr: ":8080", Handler: mux}))
+	a.Use(app.Closer("db", pool.Close))
+
+	if err := a.Run(context.Background()); err != nil {
+		panic(err)
+	}
+}
+```
+
+**Learn more:** [github.com/goloop/app](https://github.com/goloop/app) · [reference](https://pkg.go.dev/github.com/goloop/app)
+
+## observe
+
+`observe` provides health, readiness and build-info endpoints for a service,
+standard library only. It owns the operational-status model so every service
+exposes the same `/healthz`, `/readyz` and build-info shape without copy-pasted
+handlers. Health is process-level liveness and always ok; readiness runs the
+registered dependency checks in parallel and fails when any one is unusable.
+
+Each check is bounded by a per-check timeout that holds even when a check
+ignores its context, a panicking check is recovered rather than crashing the
+process, and error details are redacted by default so a health endpoint never
+leaks hostnames or credentials. It never imports a lifecycle kernel: bridge to
+one with a check over a status snapshot.
+
+```go
+package main
+
+import (
+	"context"
+	"net/http"
+
+	"github.com/goloop/observe"
+)
+
+func main() {
+	obs := observe.New(observe.WithService("api"))
+	obs.Check("postgres", func(ctx context.Context) error { return pool.Ping(ctx) })
+
+	http.Handle("/healthz", obs.HealthHandler()) // 200 while the process lives
+	http.Handle("/readyz", obs.ReadyHandler())   // 503 if a dependency is down
+	http.ListenAndServe(":8080", nil)
+}
+```
+
+**Learn more:** [github.com/goloop/observe](https://github.com/goloop/observe) · [reference](https://pkg.go.dev/github.com/goloop/observe)
+
+## jwt
+
+`jwt` issues and verifies compact JSON Web Tokens, deliberately limited to
+HS256, standard library only. It follows the JWS compact serialization of
+RFC 7515 and the registered claims of RFC 7519, but supports exactly one
+algorithm with strict defaults: there is no algorithm negotiation, no `none`
+and no asymmetric keys - a smaller surface is a safer surface.
+
+The key must be at least 32 bytes; verification requires `alg=HS256` and a
+present expiry, compares the HMAC with a constant-time check before reading the
+payload, and rejects `crit` headers, non-strict base64url and mistyped
+registered claims. Key rotation is built in: sign with the primary key, verify
+against any configured key.
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/goloop/jwt"
+)
+
+func main() {
+	key := []byte("a-32-byte-or-longer-secret-key!!")
+
+	token, _ := jwt.Sign(jwt.Claims{
+		Subject:   "user-123",
+		Issuer:    "api",
+		ExpiresAt: time.Now().Add(time.Hour).Unix(),
+	}, key)
+
+	claims, err := jwt.Verify(token, key, jwt.WithIssuer("api"))
+	fmt.Println(claims.Subject, err) // user-123 <nil>
+}
+```
+
+**Learn more:** [github.com/goloop/jwt](https://github.com/goloop/jwt) · [reference](https://pkg.go.dev/github.com/goloop/jwt)
+
+## auth
+
+`auth` provides authentication primitives: password hashing, access tokens,
+HTTP middleware and refresh-token rotation. It gives safe building blocks
+without becoming an identity platform - there is no user repository, no RBAC
+schema and no OAuth, so persistence and user management stay in your
+application. It depends only on the standard library and its sibling `jwt`.
+
+Passwords are hashed with a self-describing PBKDF2 encoding (the `PasswordHasher`
+interface lets you swap the algorithm); access tokens are HS256 JWTs with
+mandatory expiry and constant-time verification; the `Bearer` and `Cookie`
+middleware authenticate a request, while `Require` and `RequireScope` enforce
+presence and scope. Refresh tokens support rotation.
+
+```go
+package main
+
+import (
+	"net/http"
+
+	"github.com/goloop/auth"
+)
+
+func main() {
+	tm := auth.NewTokenManager(secret, auth.WithIssuer("api"))
+
+	token, _ := tm.Issue(auth.Subject{ID: "user-1", Scopes: []string{"read"}})
+	_ = token
+
+	http.Handle("/me", tm.Bearer(auth.Require(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			sub, _ := auth.SubjectFrom(r.Context())
+			w.Write([]byte(sub.ID))
+		}))))
+}
+```
+
+**Learn more:** [github.com/goloop/auth](https://github.com/goloop/auth) · [reference](https://pkg.go.dev/github.com/goloop/auth)
+
+## session
+
+`session` provides secure, signed cookie sessions for browser apps, standard
+library only. The whole session lives in an HMAC-SHA256 signed cookie, so there
+is no server-side store to run. It is a companion to token-based auth, not a
+replacement: `session` owns cookie and browser state, while an auth package owns
+subjects, passwords and tokens.
+
+The cookie is HttpOnly, SameSite=Lax and signed; enable `Secure` in production.
+The payload is versioned so the format can evolve without breaking old cookies,
+and key rotation is built in. Read with `LoadOrNew` (or the middleware plus
+`session.From`), then `Save` to persist.
+
+```go
+package main
+
+import (
+	"net/http"
+
+	"github.com/goloop/session"
+)
+
+func main() {
+	m := session.New(secret,
+		session.WithName("sid"),
+		session.WithSecure(true),
+		session.WithTTL(24*time.Hour),
+	)
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		s := m.LoadOrNew(r)
+		s.Set("theme", "dark")
+		_ = m.Save(w, s)
+	})
+}
+```
+
+**Learn more:** [github.com/goloop/session](https://github.com/goloop/session) · [reference](https://pkg.go.dev/github.com/goloop/session)
+
+## mail
+
+`mail` builds and sends outbound email, standard library only. It is a small
+transport and message builder, not a marketing platform or a template engine:
+it constructs an RFC 5322/MIME message and delivers it over SMTP, with drop-in
+transports for development and tests. Text and/or HTML bodies, attachments,
+validated addresses and RFC 2047-encoded display names are all handled.
+
+A `Sender` delivers a message: `NewSMTP` sends over SMTP (STARTTLS by default),
+`NewLogger` writes the built message to a writer for development, and
+`NewCapture` records messages for tests - so the same code path runs in
+production and under test.
+
+```go
+package main
+
+import (
+	"context"
+
+	"github.com/goloop/mail"
+)
+
+func main() {
+	sender := mail.NewSMTP(mail.SMTPConfig{
+		Host: "smtp.example.com",
+		From: mail.Address{Email: "no-reply@example.com"},
+	})
+
+	_ = sender.Send(context.Background(), mail.Message{
+		To:      []mail.Address{{Email: "user@example.com"}},
+		Subject: "Welcome",
+		Text:    "Hello and welcome.",
+		HTML:    "<p>Hello and welcome.</p>",
+	})
+}
+```
+
+**Learn more:** [github.com/goloop/mail](https://github.com/goloop/mail) · [reference](https://pkg.go.dev/github.com/goloop/mail)
+
+## cli
+
+`cli` is a command-line tool - not a library - that scaffolds and inspects
+goloop-first Go projects. It is a small dispatcher over `os.Args` with no
+third-party dependencies, and it never commits, pushes or deploys. Install it
+with `go install github.com/goloop/cli@latest` (the command is `goloop`).
+
+It scaffolds a minimal service (`goloop new`), reports which expected tools are
+installed (`goloop doctor`), summarizes the module in the current directory
+(`goloop status`), and scans a tree for stray editor/assistant artifacts
+(`goloop check`).
+
+```text
+goloop new <name> [--module path] [--dir path] [--force]
+goloop check [dir]     scan a project tree
+goloop doctor          check that expected tools are installed
+goloop status          summarize the module in the current directory
+goloop version         print the CLI version
+```
+
+**Learn more:** [github.com/goloop/cli](https://github.com/goloop/cli) · [reference](https://pkg.go.dev/github.com/goloop/cli)
+
 ## How to choose
 
 Use `env` and `opt` at program startup, `mux`, `middlewares`, `qp` and `resp`
@@ -717,6 +1164,13 @@ against PostgreSQL, `is` for validation, `log` for operational output, `set`
 and `g` inside business logic, `key` for public reversible IDs, `kind` when a
 parser or decoder needs to introspect types, `scs`, `slug` and `t13n` for
 string processing, and `trit` whenever unknown state is a first-class value.
+
+For the shape of a whole service, reach for the application layer: `app` to own
+the start/stop lifecycle and graceful shutdown, `observe` for health and
+readiness endpoints, `auth`, `jwt` and `session` for tokens, route protection
+and browser sessions, and `mail` for outbound email. The `cli` command
+scaffolds a new goloop-first project so you start from a working skeleton. See
+[Building a service](#building-a-service) for how these layers fit together.
 
 Each module is intentionally small. You do not need to adopt the whole group:
 install only the module that closes the specific problem in front of you.
