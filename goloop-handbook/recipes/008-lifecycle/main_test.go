@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -27,6 +28,33 @@ func TestProbes(t *testing.T) {
 		if rec.Code != http.StatusOK {
 			t.Errorf("%s = %d, want 200", path, rec.Code)
 		}
+	}
+}
+
+// TestReadinessGate covers example D: a check tied to a dependency makes
+// /readyz report 503 while the dependency is down and 200 once it is up.
+func TestReadinessGate(t *testing.T) {
+	var dbUp atomic.Bool
+	reg := observe.New(observe.WithService("t"))
+	reg.Check("database", func(context.Context) error {
+		if !dbUp.Load() {
+			return errDependencyDown
+		}
+		return nil
+	})
+	h := reg.ReadyHandler()
+
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/readyz", nil))
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Errorf("db down: /readyz = %d, want 503", rec.Code)
+	}
+
+	dbUp.Store(true)
+	rec = httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/readyz", nil))
+	if rec.Code != http.StatusOK {
+		t.Errorf("db up: /readyz = %d, want 200", rec.Code)
 	}
 }
 
