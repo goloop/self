@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/goloop/auth"
 	"github.com/goloop/session"
@@ -35,6 +36,44 @@ func TestToken(t *testing.T) {
 	}
 	if _, err := tm.Verify(tok + "x"); err == nil {
 		t.Error("tampered token accepted")
+	}
+}
+
+func TestTokenExpiry(t *testing.T) {
+	secret := []byte("a-32-byte-or-longer-signing-secret!!")
+	at := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+	tm := auth.NewTokenManager(secret, auth.WithTTL(30*time.Second),
+		auth.WithClock(func() time.Time { return at }))
+	tok, err := tm.Issue(auth.Subject{ID: "42"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	early := auth.NewTokenManager(secret,
+		auth.WithClock(func() time.Time { return at.Add(10 * time.Second) }))
+	if _, err := early.Verify(tok); err != nil {
+		t.Errorf("token rejected before expiry: %v", err)
+	}
+	late := auth.NewTokenManager(secret,
+		auth.WithClock(func() time.Time { return at.Add(time.Minute) }))
+	if _, err := late.Verify(tok); err == nil {
+		t.Error("expired token accepted")
+	}
+}
+
+func TestRefreshToken(t *testing.T) {
+	record, opaque, err := auth.NewRefreshToken("42", time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, secret, err := auth.ParseRefreshToken(opaque)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if record.Verify(secret) != nil {
+		t.Error("valid refresh secret rejected")
+	}
+	if record.Verify("deadbeef") == nil {
+		t.Error("wrong refresh secret accepted")
 	}
 }
 

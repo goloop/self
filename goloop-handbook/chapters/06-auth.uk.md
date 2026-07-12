@@ -60,30 +60,80 @@ _ = mgr.Save(w, s) // підписує й ставить cookie
 loaded, _ := mgr.Load(req2) // loaded.Subject == "42", loaded.Get("theme") == "dark"
 ```
 
+## Приклад D - зробіть токен таким, що спливає
+
+Access-токен має бути короткоживучим. `auth.WithTTL` задає час життя;
+`auth.WithClock` фіксує «зараз», тож тест може побачити прострочення без
+очікування. Тут два менеджери ділять секрет, але читають різні годинники: один
+перевіряє в межах вікна, інший - після нього:
+
+```go
+issuedAt := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+short := auth.NewTokenManager(secret, auth.WithTTL(30*time.Second),
+	auth.WithClock(func() time.Time { return issuedAt }))
+tok, _ := short.Issue(auth.Subject{ID: "42"})
+
+early := auth.NewTokenManager(secret,
+	auth.WithClock(func() time.Time { return issuedAt.Add(10 * time.Second) }))
+late := auth.NewTokenManager(secret,
+	auth.WithClock(func() time.Time { return issuedAt.Add(time.Minute) }))
+
+_, errEarly := early.Verify(tok) // nil: ще в межах 30с вікна
+_, errLate := late.Verify(tok)   // не nil: спливло
+```
+
+У проді ви передаєте справжній годинник (за замовчуванням) і просто видаєте
+токени з коротким TTL; фіксований годинник - лише щоб показати межу точно.
+
+## Приклад E - refresh-токен
+
+Короткому access-токену потрібен довший спосіб отримати новий.
+`auth.NewRefreshToken` повертає запис для зберігання й непрозорий рядок
+`"id.secret"` для клієнта. Ви зберігаєте лише хеш, ніколи не секрет, тож витік
+вашого сховища не дасть карбувати токени. `ParseRefreshToken` розбиває
+повернений рядок, а `record.Verify(secret)` перевіряє його за сталий час:
+
+```go
+record, opaque, _ := auth.NewRefreshToken("42", 30*24*time.Hour)
+// віддайте `opaque` клієнту; збережіть `record` (record.Hash, ніколи не секрет).
+
+id, secret, _ := auth.ParseRefreshToken(opaque) // знайдіть запис за id
+ok := record.Verify(secret) == nil              // true; невірний секрет - false
+```
+
 ## Звіт виконання
 
 ```text
 $ go test ./...
-ok  	goloop.one/handbook/006-auth	0.297s
+ok  	goloop.one/handbook/006-auth	0.314s
 
 $ go run .
 A. password hash and verify (auth PBKDF2):
-   stored hash: pbkdf2-sha256$600000$4sLgsWRnhEQ... (87 bytes, no plaintext)
+   stored hash: pbkdf2-sha256$600000$tx8dy2JXhGg... (87 bytes, no plaintext)
    verify correct password: true
    verify wrong password:   false
 B. access token issue and verify (auth + jwt), key public id:
    token (JWT): eyJhbGciOiJIUzI1NiIsInR5cCI6IkpX...
    verified subject: id=42 email=ada@example.com roles=[admin]
    tampered token rejected: true
-   key public id: qj23hctskd
+   key public id: x4t8tumhjw
 C. signed session cookie (session):
-   set cookie session (v1.eyJpZCI6ImJjYTBkODQyY...)
+   set cookie session (v1.eyJpZCI6ImVlYzM0MDgxY...)
    loaded session: subject=42 theme=dark
+D. token expiry (auth WithTTL + WithClock):
+   valid 10s in:  true
+   expired at 60s: true
+E. refresh token (auth NewRefreshToken / ParseRefreshToken):
+   client token: 8ab00e6c4ab95267... (id.secret)
+   stored: id=8ab00e6c... hash=86fb21aba9ac... (no secret)
+   verify presented secret: true
+   verify wrong secret:     false
 ```
 
 Хеш не тримає plaintext, і невірний пароль не проходить; JWT повертає свого
 суб'єкта, а один змінений символ відхиляється; сесія переживає круговий рейс
-через cookie.
+через cookie; короткоживучий токен дійсний на 10с і відхилений на 60с; а
+refresh-токен перевіряє свій секрет, тоді як зберігається лише його хеш.
 
 ## Що ви дізналися
 
@@ -92,6 +142,9 @@ C. signed session cookie (session):
 - `auth.TokenManager` видає й перевіряє підписані токени (JWT); `Subject` несе
   id, email, ролі й скоупи. Захищайте маршрути його middleware `Protect` (див.
   главу про весь стек).
+- `auth.WithTTL` обмежує час життя токена, а `WithClock` робить прострочення
+  тестованим; довший `auth.NewRefreshToken` карбує нові, тоді як ви зберігаєте
+  лише його хеш.
 - `session` тримає підписану cookie-сесію через `Save`/`Load`; `key` карбує
   короткі однозначні публічні id.
 - Ніщо з цього не зберігає секрет, який можна злити: хеші, не паролі; підписи,

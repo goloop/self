@@ -7,7 +7,9 @@
 //	A. auth  - hash and verify a password (PBKDF2);
 //	B. auth  - issue and verify an access token (a real JWT), plus key for a
 //	           short public id;
-//	C. session - set and read a signed session cookie.
+//	C. session - set and read a signed session cookie;
+//	D. auth  - a short-lived token expires and is then rejected;
+//	E. auth  - a refresh token: store the hash, hand out the opaque secret.
 package main
 
 import (
@@ -15,6 +17,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"time"
 
 	"github.com/goloop/auth"
 	"github.com/goloop/key/v2"
@@ -44,7 +47,8 @@ func run() error {
 	// Example B: an access token. TokenManager signs a Subject into a JWT; a
 	// tampered token fails verification. key mints a short public id.
 	fmt.Println("B. access token issue and verify (auth + jwt), key public id:")
-	tm := auth.NewTokenManager([]byte("a-32-byte-or-longer-signing-secret!!"), auth.WithIssuer("handbook"))
+	secret := []byte("a-32-byte-or-longer-signing-secret!!")
+	tm := auth.NewTokenManager(secret, auth.WithIssuer("handbook"))
 	token, err := tm.Issue(auth.Subject{ID: "42", Email: "ada@example.com", Roles: []string{"admin"}})
 	if err != nil {
 		return err
@@ -81,5 +85,44 @@ func run() error {
 		return err
 	}
 	fmt.Printf("   loaded session: subject=%s theme=%s\n", loaded.Subject, loaded.Get("theme"))
+
+	// Example D: a short-lived token. WithTTL bounds the lifetime; WithClock
+	// pins "now", so the expiry is exact and needs no real waiting. Two managers
+	// share the secret but read different clocks: one issues, the others verify
+	// before and after the token expires.
+	fmt.Println("D. token expiry (auth WithTTL + WithClock):")
+	issuedAt := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+	short := auth.NewTokenManager(secret, auth.WithTTL(30*time.Second),
+		auth.WithClock(func() time.Time { return issuedAt }))
+	shortTok, err := short.Issue(auth.Subject{ID: "42"})
+	if err != nil {
+		return err
+	}
+	early := auth.NewTokenManager(secret,
+		auth.WithClock(func() time.Time { return issuedAt.Add(10 * time.Second) }))
+	late := auth.NewTokenManager(secret,
+		auth.WithClock(func() time.Time { return issuedAt.Add(1 * time.Minute) }))
+	_, earlyErr := early.Verify(shortTok)
+	_, lateErr := late.Verify(shortTok)
+	fmt.Printf("   valid 10s in:  %v\n", earlyErr == nil)
+	fmt.Printf("   expired at 60s: %v\n", lateErr != nil)
+
+	// Example E: a refresh token. NewRefreshToken returns a record to store and
+	// an opaque "id.secret" string for the client. You persist only the hash,
+	// never the secret; ParseRefreshToken splits a returned token and
+	// rt.Verify(secret) checks it in constant time against the stored hash.
+	fmt.Println("E. refresh token (auth NewRefreshToken / ParseRefreshToken):")
+	record, opaque, err := auth.NewRefreshToken("42", 30*24*time.Hour)
+	if err != nil {
+		return err
+	}
+	id, presented, err := auth.ParseRefreshToken(opaque)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("   client token: %.16s... (id.secret)\n", opaque)
+	fmt.Printf("   stored: id=%.8s... hash=%.12s... (no secret)\n", id, record.Hash)
+	fmt.Printf("   verify presented secret: %v\n", record.Verify(presented) == nil)
+	fmt.Printf("   verify wrong secret:     %v\n", record.Verify("deadbeef") == nil)
 	return nil
 }
