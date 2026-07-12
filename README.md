@@ -25,7 +25,7 @@ The current group is:
   `gemini`, `grok`, `deepseek`, `openrouter`, `ollama`, `mistral`, `cohere`),
   `env`, `g`, `is`, `key`, `kind`, `log`, `middlewares`, `mux`, `opt`, `pgc`,
   `qp`, `resp`, `scs`, `set`, `slug`, `t13n`, `trit`, `websocket`.
-- **Application:** `app`, `observe`, `jwt`, `auth`, `session`, `mail`, `cli`.
+- **Application:** `app`, `observe`, `jwt`, `auth`, `argon2id`, `session`, `mail`, `cli`.
 
 Together they cover the boring but important edges of application code: reading
 configuration from `.env` files, parsing CLI arguments, validating user input,
@@ -89,7 +89,7 @@ leaves open:
 | **Lifecycle** | `app` | Own the ordered start/stop sequence and graceful shutdown so `main` does not. |
 | **HTTP edge** | `mux`, `middlewares` | Route requests over `net/http.ServeMux`; add request IDs, real IP, recovery, logging, CORS. |
 | **Handlers** | `qp`, `resp`, `is` | Read typed query parameters, validate input, write JSON/other responses. |
-| **Identity** | `auth`, `jwt`, `session` | Hash passwords, issue and verify tokens, protect routes, keep browser sessions. |
+| **Identity** | `auth`, `argon2id`, `jwt`, `session` | Hash passwords, issue and verify tokens, protect routes, keep browser sessions. |
 | **Data** | `pgc` | Compile SQL into type-safe Go against PostgreSQL. |
 | **Realtime / AI** | `websocket`, `ai` | Speak RFC 6455; call LLM providers behind one interface. |
 | **Observability** | `observe`, `log` | Expose `/healthz` and `/readyz`; produce operational logs. |
@@ -208,6 +208,7 @@ See [Building a service](#building-a-service) for how they fit together.
 - [**observe** - health, readiness and build-info endpoints](#observe)
 - [**jwt** - compact HS256 JSON Web Tokens](#jwt)
 - [**auth** - password hashing, access tokens and bearer middleware](#auth)
+- [**argon2id** - memory-hard Argon2id password hashing](#argon2id)
 - [**session** - signed-cookie sessions for browser apps](#session)
 - [**mail** - build and send outbound email over SMTP](#mail)
 - [**cli** - scaffold and inspect goloop-first projects](#cli)
@@ -1054,6 +1055,34 @@ func main() {
 ```
 
 **Learn more:** [github.com/goloop/auth](https://github.com/goloop/auth) · [reference](https://pkg.go.dev/github.com/goloop/auth)
+
+## argon2id
+
+`argon2id` hashes and verifies passwords with Argon2id (RFC 9106), the
+memory-hard function recommended for password storage. Memory-hard means each
+hash costs a fixed amount of RAM, so a stolen hash is expensive to crack
+offline. It implements Argon2id and its underlying BLAKE2b on the standard
+library alone, with no dependencies, and is pinned to the official RFC test
+vectors.
+
+The encoded hash is a self-describing PHC string, and the `Hasher` method set
+matches the `PasswordHasher` interface in `auth`, so it drops in there without
+either package importing the other.
+
+```go
+package main
+
+import "github.com/goloop/argon2id"
+
+func main() {
+	h := argon2id.New()
+
+	encoded, _ := h.Hash([]byte("correct horse battery staple")) // store it
+	_ = h.Verify(encoded, []byte("correct horse battery staple")) // nil on match
+}
+```
+
+**Learn more:** [github.com/goloop/argon2id](https://github.com/goloop/argon2id) · [reference](https://pkg.go.dev/github.com/goloop/argon2id)
 
 ## session
 
