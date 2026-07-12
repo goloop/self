@@ -5,8 +5,9 @@
 # 09. Real-time with WebSockets
 
 **Task.** Keep a connection open and send messages over it both ways: echo a
-message, do a small request/response, and push a stream of updates from the
-server to the client.
+message, do a small request/response, push a stream of updates from the server
+to the client, fan one message out to every connected client, and close a
+connection cleanly with a status code.
 
 **Module.** [`websocket`](https://github.com/goloop/websocket) is a from-scratch
 RFC 6455 implementation on the standard library, with both ends: `Upgrade` on
@@ -70,9 +71,55 @@ for {
 }
 ```
 
+## Example D - broadcast to a hub
+
+The reason to reach for a socket over polling is fan-out: one event delivered to
+every connected client. A hub is a guarded set of connections plus a broadcast
+write. Each client's handler registers it, then loops reading; a message from
+any client is written to all of them:
+
+```go
+type hub struct {
+	mu    sync.Mutex
+	conns map[*websocket.Conn]bool
+}
+
+func (h *hub) broadcast(data []byte) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	for c := range h.conns {
+		if err := c.WriteMessage(websocket.TextMessage, data); err != nil {
+			delete(h.conns, c) // drop a dead connection
+		}
+	}
+}
+
+// in the /hub handler: h.add(conn); then for each message, h.broadcast(data)
+```
+
+Two clients join, one sends `"hello all"`, and both receive it. Add rooms (a
+hub per key) and you have a chat or a live feed.
+
+## Example E - a graceful close with a status code
+
+A clean shutdown is not just dropping the socket. `CloseWithStatus` sends a
+close frame with a code and reason; the client's next read reports that code, so
+it can tell a normal close from a crash. `IsCloseError` inspects it:
+
+```go
+// server: send a last message, then close cleanly
+_ = conn.WriteMessage(websocket.TextMessage, []byte("closing now"))
+_ = conn.CloseWithStatus(websocket.CloseNormalClosure, "bye")
+
+// client: read the message, then see the close code on the next read
+_, msg, _ := c.ReadMessage() // "closing now"
+_, _, err := c.ReadMessage()
+websocket.IsCloseError(err, websocket.CloseNormalClosure) // true
+```
+
 ## Execution report
 
-The program hosts the three endpoints and dials them as a client:
+The program hosts the endpoints and dials them as a client:
 
 ```text
 $ go test ./...
@@ -87,11 +134,17 @@ C. server push (a stream of messages):
    push: tick 1
    push: tick 2
    push: tick 3
+D. broadcast to a hub (fan-out to every client):
+   client A sent "hello all"; A got "hello all", B got "hello all"
+E. graceful close with a status code:
+   message "closing now", then normal-closure=true
 ```
 
 The echo returned the exact bytes; the JSON RPC computed the sum on the server
-and read it back on the client; and the stream delivered three server-initiated
-messages over one connection.
+and read it back on the client; the stream delivered three server-initiated
+messages over one connection; the hub fanned one client's message out to both
+connections; and the graceful close let the client read a normal-closure code
+instead of a bare error. The recipe passes under the race detector.
 
 ## What you learned
 
@@ -100,8 +153,10 @@ messages over one connection.
 - `ReadMessage`/`WriteMessage` move raw frames; `ReadJSON`/`WriteJSON` marshal
   for you.
 - A socket lets the server push without a request, which is the point of using
-  one over polling. Wrap a set of connections in a hub to broadcast to many
-  clients.
+  one over polling. A hub (a guarded set of connections plus a broadcast) fans
+  one message out to every client; add rooms for a chat or a live feed.
+- `CloseWithStatus` closes with a code and reason; `IsCloseError` lets the other
+  end tell a normal close from a crash.
 - A body cap or a buffering timeout middleware must be skipped for an upgrade;
   the whole-stack chapter shows the pattern.
 

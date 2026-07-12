@@ -6,7 +6,9 @@
 //
 //	A. echo    - the server reads a text message and writes it back;
 //	B. rpc     - a JSON request in, a JSON reply out (WriteJSON/ReadJSON);
-//	C. stream  - the server pushes a sequence of messages the client reads.
+//	C. stream  - the server pushes a sequence of messages the client reads;
+//	D. hub     - one message fanned out to every connected client (broadcast);
+//	E. close   - the server closes with a status code the client can read.
 package main
 
 import (
@@ -16,10 +18,43 @@ import (
 	"net/http/httptest"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/goloop/websocket"
 )
+
+// hub is a set of live connections with a broadcast. A real chat or live feed
+// is this plus rooms; the core is a guarded map and a fan-out write.
+type hub struct {
+	mu    sync.Mutex
+	conns map[*websocket.Conn]bool
+}
+
+func newHub() *hub { return &hub{conns: map[*websocket.Conn]bool{}} }
+
+func (h *hub) add(c *websocket.Conn) {
+	h.mu.Lock()
+	h.conns[c] = true
+	h.mu.Unlock()
+}
+
+func (h *hub) remove(c *websocket.Conn) {
+	h.mu.Lock()
+	delete(h.conns, c)
+	h.mu.Unlock()
+}
+
+// broadcast writes data to every connection, dropping any that error.
+func (h *hub) broadcast(data []byte) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	for c := range h.conns {
+		if err := c.WriteMessage(websocket.TextMessage, data); err != nil {
+			delete(h.conns, c)
+		}
+	}
+}
 
 func main() {
 	if err := run(); err != nil {
@@ -77,12 +112,45 @@ func run() error {
 		fmt.Printf("   push: %s\n", m)
 	}
 	c.Close()
+
+	// Example D: broadcast. Two clients join the hub; one sends a message and
+	// the server fans it out to every connection, so both receive it.
+	fmt.Println("D. broadcast to a hub (fan-out to every client):")
+	a, _, err := websocket.Dial(ctx, base+"/hub")
+	if err != nil {
+		return err
+	}
+	defer a.Close()
+	b, _, err := websocket.Dial(ctx, base+"/hub")
+	if err != nil {
+		return err
+	}
+	defer b.Close()
+	_ = a.WriteMessage(websocket.TextMessage, []byte("hello all"))
+	_, ma, _ := a.ReadMessage()
+	_, mb, _ := b.ReadMessage()
+	fmt.Printf("   client A sent %q; A got %q, B got %q\n", "hello all", ma, mb)
+
+	// Example E: a graceful close with a status code. The server sends one
+	// message, then closes with CloseNormalClosure; the client reads the
+	// message, and the next read reports the close code instead of a raw EOF.
+	fmt.Println("E. graceful close with a status code:")
+	c, _, err = websocket.Dial(ctx, base+"/bye")
+	if err != nil {
+		return err
+	}
+	_, first, _ := c.ReadMessage()
+	_, _, closeErr := c.ReadMessage()
+	fmt.Printf("   message %q, then normal-closure=%v\n",
+		first, websocket.IsCloseError(closeErr, websocket.CloseNormalClosure))
+	c.Close()
 	return nil
 }
 
-// handler serves the three WebSocket endpoints.
+// handler serves the WebSocket endpoints.
 func handler() http.Handler {
 	mux := http.NewServeMux()
+	h := newHub()
 
 	mux.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := websocket.Upgrade(w, r)
@@ -122,6 +190,41 @@ func handler() http.Handler {
 				return
 			}
 		}
+	})
+
+	// /hub: every connection joins the hub; each message it sends is broadcast
+	// to all connected clients, the sender included.
+	mux.HandleFunc("/hub", func(w http.ResponseWriter, r *http.Request) {
+		conn, err := websocket.Upgrade(w, r)
+		if err != nil {
+			return
+		}
+		h.add(conn)
+		defer func() {
+			h.remove(conn)
+			conn.Close()
+		}()
+		for {
+			_, data, err := conn.ReadMessage()
+			if err != nil {
+				return
+			}
+			h.broadcast(data)
+		}
+	})
+
+	// /bye: send one message, then close cleanly with a status code the client
+	// can distinguish from an abrupt disconnect.
+	mux.HandleFunc("/bye", func(w http.ResponseWriter, r *http.Request) {
+		conn, err := websocket.Upgrade(w, r)
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+		if err := conn.WriteMessage(websocket.TextMessage, []byte("closing now")); err != nil {
+			return
+		}
+		_ = conn.CloseWithStatus(websocket.CloseNormalClosure, "bye")
 	})
 
 	return mux
