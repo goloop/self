@@ -40,20 +40,25 @@ running it, so you see exactly what the code does.
 - [03. Validate and clean user input](chapters/03-validate-and-clean.md) -
   `is`, `norm` · recipe [`003-validate-and-clean`](recipes/003-validate-and-clean/)
 
-### Part II - Data and models *(in progress)*
+### Part II - Data and models
 
 - [04. Typed PostgreSQL with migrations](chapters/04-postgresql.md) - `pgc`
   · recipe [`004-postgresql`](recipes/004-postgresql/)
 - [05. Ask a language model, swap the provider](chapters/05-ai.md) - `ai`, `anthropic`, `openai`
   · recipe [`005-ai`](recipes/005-ai/)
-- 06. Sessions, tokens and passwords - `auth`, `jwt`, `session`, `key`
-- 07. Slugs, transliteration and cases - `slug`, `t13n`, `scs`
+- [06. Sessions, tokens and passwords](chapters/06-auth.md) - `auth`, `jwt`,
+  `session`, `key` · recipe [`006-auth`](recipes/006-auth/)
+- [07. Slugs, transliteration and cases](chapters/07-slug.md) - `slug`, `t13n`,
+  `scs` · recipe [`007-slug`](recipes/007-slug/)
 
-### Part III - The whole stack *(planned)*
+### Part III - The whole stack
 
-- 08. A service lifecycle - `app`, `observe`, `log`
-- 09. Real-time with WebSockets - `websocket`
-- 10. Putting it together - one API on the whole GoLoop stack
+- [08. A service lifecycle](chapters/08-lifecycle.md) - `app`, `observe`, `log`
+  · recipe [`008-lifecycle`](recipes/008-lifecycle/)
+- [09. Real-time with WebSockets](chapters/09-websocket.md) - `websocket`
+  · recipe [`009-websocket`](recipes/009-websocket/)
+- [10. Putting it together](chapters/10-whole-stack.md) - one API on the whole
+  GoLoop stack · recipe [`010-whole-stack`](recipes/010-whole-stack/)
 
 ## Start here
 

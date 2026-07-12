@@ -1,0 +1,2 @@
+{ "queries": "queries", "migrations": "migrations", "out": "internal/store",
+  "package": "store", "json_tags": true, "rename": {"users":"User","notes":"Note"} }

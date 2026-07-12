@@ -4,5 +4,13 @@ recipes/002-http-json-api/002-http-json-api
 recipes/003-validate-and-clean/003-validate-and-clean
 recipes/004-postgresql/004-postgresql
 recipes/005-ai/005-ai
+recipes/006-auth/006-auth
+recipes/007-slug/007-slug
+recipes/008-lifecycle/008-lifecycle
+recipes/008-lifecycle/svc
+recipes/009-websocket/009-websocket
+recipes/010-whole-stack/010-whole-stack
+recipes/010-whole-stack/notes
+recipes/010-whole-stack/pgc
 recipes/**/*.log
 recipes/**/.env

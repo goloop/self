@@ -41,20 +41,25 @@
 - [03. Валідація й чистка вводу](chapters/03-validate-and-clean.uk.md) -
   `is`, `norm` · рецепт [`003-validate-and-clean`](recipes/003-validate-and-clean/)
 
-### Частина II - дані й моделі *(у роботі)*
+### Частина II - дані й моделі
 
 - [04. Типобезпечний PostgreSQL з міграціями](chapters/04-postgresql.uk.md) -
   `pgc` · рецепт [`004-postgresql`](recipes/004-postgresql/)
 - [05. Запитати мовну модель, змінити провайдера](chapters/05-ai.uk.md) -
   `ai`, `anthropic`, `openai` · рецепт [`005-ai`](recipes/005-ai/)
-- 06. Сесії, токени й паролі - `auth`, `jwt`, `session`, `key`
-- 07. Слаги, транслітерація й регістри - `slug`, `t13n`, `scs`
+- [06. Сесії, токени й паролі](chapters/06-auth.uk.md) - `auth`, `jwt`,
+  `session`, `key` · рецепт [`006-auth`](recipes/006-auth/)
+- [07. Слаги, транслітерація й регістри](chapters/07-slug.uk.md) - `slug`, `t13n`,
+  `scs` · рецепт [`007-slug`](recipes/007-slug/)
 
-### Частина III - увесь стек *(у планах)*
+### Частина III - увесь стек
 
-- 08. Життєвий цикл сервісу - `app`, `observe`, `log`
-- 09. Реальний час на WebSocket - `websocket`
-- 10. Складаємо все разом - один API на цілому стеку GoLoop
+- [08. Життєвий цикл сервісу](chapters/08-lifecycle.uk.md) - `app`, `observe`, `log`
+  · рецепт [`008-lifecycle`](recipes/008-lifecycle/)
+- [09. Реальний час на WebSocket](chapters/09-websocket.uk.md) - `websocket`
+  · рецепт [`009-websocket`](recipes/009-websocket/)
+- [10. Складаємо все разом](chapters/10-whole-stack.uk.md) - один API на цілому
+  стеку GoLoop · рецепт [`010-whole-stack`](recipes/010-whole-stack/)
 
 ## Почніть звідси
 
