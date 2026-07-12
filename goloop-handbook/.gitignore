@@ -1,0 +1,8 @@
+# Never commit recipe build artifacts or local run state.
+recipes/001-configuration/001-configuration
+recipes/002-http-json-api/002-http-json-api
+recipes/003-validate-and-clean/003-validate-and-clean
+recipes/004-postgresql/004-postgresql
+recipes/005-ai/005-ai
+recipes/**/*.log
+recipes/**/.env
