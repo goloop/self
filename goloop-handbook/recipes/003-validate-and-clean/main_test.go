@@ -56,3 +56,33 @@ func TestNormToolkit(t *testing.T) {
 		t.Errorf("Keep Letters = %q", got)
 	}
 }
+
+// TestValidateCollectsErrors covers example D: every invalid field reports a
+// problem, and a valid form reports none.
+func TestValidateCollectsErrors(t *testing.T) {
+	problems := validate(SignupForm{Name: " ", Email: "not-an-email", Phone: "12"})
+	for _, field := range []string{"name", "email", "phone"} {
+		if _, ok := problems[field]; !ok {
+			t.Errorf("expected a problem for %q, got none", field)
+		}
+	}
+	if got := validate(SignupForm{Name: "Ada", Email: "a@b.co"}); len(got) != 0 {
+		t.Errorf("valid form reported problems: %v", got)
+	}
+}
+
+// TestCleanThenCheck covers example E: normalize then validate a card (Luhn)
+// and an IBAN (checksum).
+func TestCleanThenCheck(t *testing.T) {
+	card, _ := norm.BankCard("4539 1488 0343 6467")
+	if !is.BankCard(card) {
+		t.Errorf("normalized card %q failed Luhn", card)
+	}
+	if is.BankCard("4539148803436460") {
+		t.Error("a wrong-digit card passed Luhn")
+	}
+	iban, _ := norm.IBAN("de89 3704 0044 0532 0130 00")
+	if !is.IBAN(iban) {
+		t.Errorf("normalized IBAN %q failed checksum", iban)
+	}
+}

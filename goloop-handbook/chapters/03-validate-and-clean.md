@@ -71,6 +71,47 @@ norm.Remove("a,b;c.d", norm.Punct)   // "abcd"
 norm.Keep("Go1.24!", norm.Letters)   // "Go"
 ```
 
+## Example D - collect every error at once
+
+Failing on the first bad field makes a user fix one thing, resubmit, and fail on
+the next. A form validator should report *all* the problems in one pass. Return
+a map of field to message, and an empty map means valid:
+
+```go
+func validate(f SignupForm) map[string]string {
+	problems := map[string]string{}
+	if norm.Clean(f.Name) == "" {
+		problems["name"] = "a name is required"
+	}
+	if !is.Email(f.Email) {
+		problems["email"] = "must be a valid email address"
+	}
+	if f.Phone != "" && !is.Phone(f.Phone) {
+		problems["phone"] = "must be a valid phone number, or empty"
+	}
+	return problems
+}
+```
+
+Note the division of labor again: `norm.Clean` before the emptiness test (so a
+tab is not a name), and read-only `is` predicates for the exact checks.
+
+## Example E - clean, then check
+
+Some values arrive formatted for humans but must be validated in a canonical
+form. Normalize first with `norm`, then validate with `is`. A card number is
+stripped of spaces and checked with the Luhn algorithm; an IBAN is upper-cased
+and checked with its checksum:
+
+```go
+card, _ := norm.BankCard("4539 1488 0343 6467") // "4539148803436467"
+is.BankCard(card)                                // true  (valid Luhn)
+is.BankCard("4539148803436460")                  // false (one wrong digit)
+
+iban, _ := norm.IBAN("de89 3704 0044 0532 0130 00") // "DE89370400440532013000"
+is.IBAN(iban)                                        // true (valid checksum)
+```
+
 ## Execution report
 
 ```text
@@ -94,12 +135,23 @@ C. norm toolkit (shape a value to a canonical form):
    AlnumOnly("user.name_42!")   = "username42"
    Remove("a,b;c.d", Punct) = "abcd"
    Keep("Go1.24!", Letters) = "Go"
+D. collect all field errors at once:
+   name   -> a name is required
+   email  -> must be a valid email address
+   phone  -> must be a valid phone number, or empty
+E. clean then check (canonical form, then validate):
+   card "4539148803436467" -> is.BankCard=true (Luhn)
+   card with a wrong digit -> is.BankCard=false
+   iban "DE89370400440532013000" -> is.IBAN=true (checksum)
 ```
 
 Form 1 came in with a zero-width space in the name, a mixed-case email with
 spaces, and a formatted phone; it left clean, folded and in E.164. Form 3's
-name was a lone tab, which cleans to nothing, so it is rejected. Nothing
-untrusted slipped through, and nothing merely untidy was thrown away.
+name was a lone tab, which cleans to nothing, so it is rejected. In D one form
+with three bad fields reported all three at once. In E the card and IBAN arrived
+with spaces and mixed case, were normalized, and then passed their Luhn and
+checksum tests, while a single wrong digit failed. Nothing untrusted slipped
+through, and nothing merely untidy was thrown away.
 
 ## What you learned
 
@@ -107,10 +159,12 @@ untrusted slipped through, and nothing merely untidy was thrown away.
   be forgiving (`norm`).
 - `norm.Clean` is the safe one-call cleanup; `norm.EmailFold` gives a
   case-insensitive identity key; `norm.E164` and friends return `(value, ok)`.
-- `is` predicates (`Email`, `URL`, `UUID`, `Numeric`, ...) are read-only yes/no
-  answers for a parameter or config value.
+- `is` predicates (`Email`, `URL`, `UUID`, `Numeric`, `BankCard`, `IBAN`, ...)
+  are read-only yes/no answers for a parameter or config value.
 - The `norm` toolkit (`DigitsOnly`, `AlnumOnly`, `Keep`, `Remove`) shapes a
   value using character classes.
+- Validate every field and collect the failures in one pass, so a form reports
+  all its problems at once; for formatted values, `norm` first, then `is`.
 
 You have reached the end of Part I. Part II moves on to storing this clean data
 in PostgreSQL and asking a language model about it.

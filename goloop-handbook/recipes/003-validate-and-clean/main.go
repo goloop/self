@@ -1,10 +1,12 @@
 // Recipe 003: validate and clean user input before you trust it.
 //
-// Three examples of the two halves of the job:
+// Five examples of the two halves of the job:
 //
-//	A. a signup form - clean the mess and fold an email into an identity;
+//	A. a signup form  - clean the mess and fold an email into an identity;
 //	B. the is gallery - read-only predicates that answer yes or no;
-//	C. the norm toolkit - Keep/Remove/DigitsOnly shape a value to a canonical form.
+//	C. the norm toolkit - Keep/Remove/DigitsOnly shape a value to a canonical form;
+//	D. collect errors - validate every field at once and report all failures;
+//	E. clean then check - normalize a value, then validate the canonical form.
 //
 // is answers "is this valid?" (read-only); norm answers "make this the
 // canonical form" (cleaning and folding). Validate what must be exact; clean
@@ -105,4 +107,42 @@ func main() {
 	fmt.Printf("   AlnumOnly(%q)   = %q\n", "user.name_42!", norm.AlnumOnly("user.name_42!"))
 	fmt.Printf("   Remove(%q, Punct) = %q\n", "a,b;c.d", norm.Remove("a,b;c.d", norm.Punct))
 	fmt.Printf("   Keep(%q, Letters) = %q\n", "Go1.24!", norm.Keep("Go1.24!", norm.Letters))
+
+	// Example D: validate every field and collect all failures, so a form can
+	// report each problem at once instead of one per round trip.
+	fmt.Println("D. collect all field errors at once:")
+	bad := SignupForm{Name: " ", Email: "not-an-email", Phone: "12"}
+	problems := validate(bad)
+	for _, field := range []string{"name", "email", "phone"} {
+		if msg, ok := problems[field]; ok {
+			fmt.Printf("   %-6s -> %s\n", field, msg)
+		}
+	}
+
+	// Example E: clean, then check. norm produces the canonical form and is
+	// verifies it - here a card number (Luhn) and an IBAN (checksum) that arrive
+	// with spaces and mixed case.
+	fmt.Println("E. clean then check (canonical form, then validate):")
+	card, _ := norm.BankCard("4539 1488 0343 6467")
+	fmt.Printf("   card %q -> is.BankCard=%v (Luhn)\n", card, is.BankCard(card))
+	fmt.Printf("   card with a wrong digit -> is.BankCard=%v\n", is.BankCard("4539148803436460"))
+	iban, _ := norm.IBAN("de89 3704 0044 0532 0130 00")
+	fmt.Printf("   iban %q -> is.IBAN=%v (checksum)\n", iban, is.IBAN(iban))
+}
+
+// validate checks every field of a form and returns a map of field name to a
+// message for each one that fails, so the caller learns all the problems in a
+// single pass. An empty map means the form is valid.
+func validate(f SignupForm) map[string]string {
+	problems := map[string]string{}
+	if norm.Clean(f.Name) == "" {
+		problems["name"] = "a name is required"
+	}
+	if !is.Email(f.Email) {
+		problems["email"] = "must be a valid email address"
+	}
+	if f.Phone != "" && !is.Phone(f.Phone) {
+		problems["phone"] = "must be a valid phone number, or empty"
+	}
+	return problems
 }

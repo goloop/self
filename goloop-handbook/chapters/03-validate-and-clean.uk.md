@@ -73,6 +73,48 @@ norm.Remove("a,b;c.d", norm.Punct)   // "abcd"
 norm.Keep("Go1.24!", norm.Letters)   // "Go"
 ```
 
+## Приклад D - зберіть усі помилки одразу
+
+Падіння на першому поганому полі змушує користувача виправити одне, надіслати
+знову й впасти на наступному. Валідатор форми має повідомити *всі* проблеми за
+один прохід. Поверніть мапу поля в повідомлення; порожня мапа означає, що все
+дійсне:
+
+```go
+func validate(f SignupForm) map[string]string {
+	problems := map[string]string{}
+	if norm.Clean(f.Name) == "" {
+		problems["name"] = "a name is required"
+	}
+	if !is.Email(f.Email) {
+		problems["email"] = "must be a valid email address"
+	}
+	if f.Phone != "" && !is.Phone(f.Phone) {
+		problems["phone"] = "must be a valid phone number, or empty"
+	}
+	return problems
+}
+```
+
+Зверніть увагу знову на поділ праці: `norm.Clean` перед перевіркою на порожнечу
+(щоб таб не був іменем), а read-only предикати `is` для точних перевірок.
+
+## Приклад E - спершу почистіть, потім перевірте
+
+Деякі значення приходять форматованими для людей, але валідувати їх треба в
+канонічній формі. Спершу нормалізуйте через `norm`, тоді валідуйте через `is`.
+Номер картки очищується від пробілів і перевіряється алгоритмом Луна; IBAN
+переводиться у верхній регістр і перевіряється контрольною сумою:
+
+```go
+card, _ := norm.BankCard("4539 1488 0343 6467") // "4539148803436467"
+is.BankCard(card)                                // true  (валідний Луна)
+is.BankCard("4539148803436460")                  // false (одна невірна цифра)
+
+iban, _ := norm.IBAN("de89 3704 0044 0532 0130 00") // "DE89370400440532013000"
+is.IBAN(iban)                                        // true (валідна контрольна сума)
+```
+
 ## Звіт виконання
 
 ```text
@@ -96,11 +138,22 @@ C. norm toolkit (shape a value to a canonical form):
    AlnumOnly("user.name_42!")   = "username42"
    Remove("a,b;c.d", Punct) = "abcd"
    Keep("Go1.24!", Letters) = "Go"
+D. collect all field errors at once:
+   name   -> a name is required
+   email  -> must be a valid email address
+   phone  -> must be a valid phone number, or empty
+E. clean then check (canonical form, then validate):
+   card "4539148803436467" -> is.BankCard=true (Luhn)
+   card with a wrong digit -> is.BankCard=false
+   iban "DE89370400440532013000" -> is.IBAN=true (checksum)
 ```
 
 Форма 1 прийшла з невидимим пробілом в імені, email-ом у змішаному регістрі з
 пробілами й форматованим телефоном; вона вийшла чистою, згорнутою і в E.164.
-Ім'я форми 3 - самотній таб, що чиститься в порожнечу, тож її відхилено. Ніщо
+Ім'я форми 3 - самотній таб, що чиститься в порожнечу, тож її відхилено. У D
+одна форма з трьома поганими полями повідомила всі три одразу. У E картка й IBAN
+прийшли з пробілами й змішаним регістром, були нормалізовані, а тоді пройшли свої
+перевірки Луна й контрольної суми, тоді як одна невірна цифра впала. Ніщо
 недовірене не прослизнуло, і ніщо просто неохайне не викинуто.
 
 ## Що ви дізналися
@@ -109,10 +162,12 @@ C. norm toolkit (shape a value to a canonical form):
   що має бути поблажливим (`norm`).
 - `norm.Clean` - безпечна one-call чистка; `norm.EmailFold` дає case-insensitive
   ключ-ідентичність; `norm.E164` тощо повертають `(значення, ok)`.
-- Предикати `is` (`Email`, `URL`, `UUID`, `Numeric`, ...) - це read-only
-  «так/ні» для параметра чи значення конфігу.
+- Предикати `is` (`Email`, `URL`, `UUID`, `Numeric`, `BankCard`, `IBAN`, ...) -
+  це read-only «так/ні» для параметра чи значення конфігу.
 - Toolkit `norm` (`DigitsOnly`, `AlnumOnly`, `Keep`, `Remove`) надає форму
   значенню через класи символів.
+- Валідуйте кожне поле й збирайте помилки за один прохід, щоб форма повідомила
+  всі свої проблеми одразу; для форматованих значень - спершу `norm`, тоді `is`.
 
 Ви дійшли кінця Частини I. Частина II переходить до збереження цих чистих даних у
 PostgreSQL і запитів до мовної моделі про них.
