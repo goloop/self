@@ -559,7 +559,10 @@ import (
 )
 
 func main() {
-	fmt.Println(norm.Email("  Example @ Gmail.com ")) // Example@gmail.com true
+	// Email lower-cases only the domain (the local part is case-sensitive);
+	// EmailFold folds the whole address for a case-insensitive identity key.
+	fmt.Println(norm.Email("  Example @ Gmail.com "))     // Example@gmail.com true
+	fmt.Println(norm.EmailFold("  Example @ Gmail.com ")) // example@gmail.com true
 
 	iban, ok := norm.IBAN("de89 3704 0044 0532 0130 00")
 	fmt.Println(iban, ok) // DE89370400440532013000 true

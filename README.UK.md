@@ -562,7 +562,10 @@ import (
 )
 
 func main() {
-	fmt.Println(norm.Email("  Example @ Gmail.com ")) // Example@gmail.com true
+	// Email лоуеркейсить лише домен (локальна частина case-sensitive);
+	// EmailFold згортає всю адресу в case-insensitive ключ-ідентичність.
+	fmt.Println(norm.Email("  Example @ Gmail.com "))     // Example@gmail.com true
+	fmt.Println(norm.EmailFold("  Example @ Gmail.com ")) // example@gmail.com true
 
 	iban, ok := norm.IBAN("de89 3704 0044 0532 0130 00")
 	fmt.Println(iban, ok) // DE89370400440532013000 true
