@@ -28,12 +28,15 @@ type Config struct {
 	Debug    bool          `env:"APP_DEBUG" def:"false" opt:"debug" help:"verbose logging"`
 	Secret   string        `env:"APP_SECRET" opt:"-"`
 	Replicas int           `env:"APP_REPLICAS" def:"1" opt:"replicas" help:"worker count"`
+	Origins  []string      `env:"APP_ORIGINS" def:"http://localhost:3000" sep:"," opt:"origins"`
 }
 ```
 
 `env` називає змінну оточення, `def` - дефолт, `opt` - прапорець. `opt:"-"`
 означає «ніколи не прапорець», і саме так `Secret` лишається поза `--help` та
-історією shell. Типи полів - звичайні Go-типи, розбираються за вас.
+історією shell. Тег `sep` розбиває одну змінну на зріз, тож
+`APP_ORIGINS="https://a.example,https://b.example"` стає `[]string`. Типи полів -
+звичайні Go-типи, розбираються за вас.
 
 ## Приклад A - нашаруйте джерела
 
@@ -83,6 +86,28 @@ var b strings.Builder
 _ = env.MarshalWriter(&b, cfg) // APP_ADDR=:8080\nAPP_ENV=...\n
 ```
 
+## Приклад D - зробіть поле обов'язковим
+
+Відсутнє налаштування має впасти голосно на старті, а не виринути таємничим
+нульовим значенням пізніше. Додайте `required` до тегу `env`: без дефолта й без
+заданого значення `env.Unmarshal` повертає `env.ErrRequired`, називаючи ключ:
+
+```go
+type mustHave struct {
+	DatabaseURL string `env:"DATABASE_URL,required"`
+}
+
+var need mustHave
+err := env.Unmarshal(&need)              // відсутнє -> env.ErrRequired
+errors.Is(err, env.ErrRequired)          // true, а повідомлення називає DATABASE_URL
+
+os.Setenv("DATABASE_URL", "postgres://localhost/app")
+_ = env.Unmarshal(&need)                 // тепер nil; need.DatabaseURL задано
+```
+
+Використовуйте `required` для значень, без яких сервіс справді не стартує, і
+`def` для всього, що має розумний запасний варіант.
+
 ## Звіт виконання
 
 Протестовано, потім запущено раз із наявним `.env` і заданим прапорцем:
@@ -104,17 +129,25 @@ C. marshal the struct back to .env lines (a template):
    APP_DEBUG=false
    APP_SECRET=from-dotenv
    APP_REPLICAS=4
+   APP_ORIGINS=http://localhost:3000
+D. a required field (env:"...,required"):
+   missing -> error: true
+   present -> ok=true value=postgres://localhost/app
 ```
 
-У A `env=staging` прийшло з `.env`, `replicas=4` - з прапорця, а секрет прочитано,
-але ніде не надруковано. У C та сама структура повертається в `.env`-рядки (і
-так, `APP_SECRET` там є - це нагадування редагувати).
+У A `env=staging` прийшло з `.env`, `replicas=4` - з прапорця, `origins` було
+єдиним дефолтним значенням, а секрет прочитано, але ніде не надруковано. У C та
+сама структура повертається в `.env`-рядки (і так, `APP_SECRET` там є - це
+нагадування редагувати). У D обов'язковий ключ дає помилку без значення й
+успіх, щойно його задано.
 
 ## Що ви дізналися
 
 - Опишіть конфігурацію **один раз**, як структуру з тегами `env`/`def`/`opt`.
 - Застосовуйте джерела від найнижчого пріоритету: `env.LoadSafe` ->
   `env.Unmarshal` -> `opt.UnmarshalArgs`; для секретів `opt:"-"`.
+- Тег `sep` розбиває одну змінну на зріз; `env:"NAME,required"` робить значення
+  обов'язковим і повертає `env.ErrRequired`, коли його немає.
 - `env.Parse` читає сніпет у мапу, коли структура не потрібна.
 - `env.MarshalWriter` пише структуру назад у `.env`-рядки (редагуйте секрети).
 

@@ -1,6 +1,11 @@
 package main
 
-import "testing"
+import (
+	"errors"
+	"testing"
+
+	"github.com/goloop/env/v2"
+)
 
 // TestDefaults checks that an empty environment and no flags yield the
 // documented defaults.
@@ -39,6 +44,32 @@ func TestEnvThenFlags(t *testing.T) {
 	}
 	if cfg.Secret != "s3cr3t" {
 		t.Errorf("secret from env = %q", cfg.Secret)
+	}
+}
+
+// TestOriginsSlice checks example A's slice field: one variable split on the
+// sep tag becomes a []string.
+func TestOriginsSlice(t *testing.T) {
+	t.Setenv("APP_ORIGINS", "https://a.example,https://b.example")
+	cfg, err := load(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(cfg.Origins) != 2 || cfg.Origins[0] != "https://a.example" {
+		t.Fatalf("origins = %v, want two split values", cfg.Origins)
+	}
+}
+
+// TestRequiredField checks example D: a required variable is an error when
+// missing and succeeds when set.
+func TestRequiredField(t *testing.T) {
+	var need mustHave
+	if err := env.Unmarshal(&need); !errors.Is(err, env.ErrRequired) {
+		t.Fatalf("missing required -> %v, want ErrRequired", err)
+	}
+	t.Setenv("DATABASE_URL", "postgres://localhost/app")
+	if err := env.Unmarshal(&need); err != nil || need.DatabaseURL == "" {
+		t.Fatalf("present required -> %v %q", err, need.DatabaseURL)
 	}
 }
 
