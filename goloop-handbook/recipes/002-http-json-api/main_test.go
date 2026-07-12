@@ -7,10 +7,10 @@ import (
 	"testing"
 )
 
-// TestRoutes exercises the router directly with httptest - no network needed.
-func TestRoutes(t *testing.T) {
-	h := newRouter()
-
+// TestReadRoutes covers example A: JSON, a path parameter and a clean 404,
+// plus the security and custom headers every response carries.
+func TestReadRoutes(t *testing.T) {
+	h := newRouter(newStore())
 	cases := []struct {
 		method, path, wantBodyContains string
 		wantStatus                     int
@@ -28,17 +28,36 @@ func TestRoutes(t *testing.T) {
 		if !strings.Contains(rec.Body.String(), c.wantBodyContains) {
 			t.Errorf("%s %s: body %q missing %q", c.method, c.path, rec.Body.String(), c.wantBodyContains)
 		}
-		// The security-headers middleware runs on every response.
 		if rec.Header().Get("X-Content-Type-Options") == "" {
 			t.Errorf("%s %s: security header missing", c.method, c.path)
+		}
+		if rec.Header().Get("X-Api-Version") != "v1" {
+			t.Errorf("%s %s: custom middleware header missing", c.method, c.path)
 		}
 	}
 }
 
-func TestRequestIDHeader(t *testing.T) {
+// TestWriteStatuses covers example B: 201 Created with a Location header on
+// POST, and 204 No Content on DELETE.
+func TestWriteStatuses(t *testing.T) {
+	h := newRouter(newStore())
+
 	rec := httptest.NewRecorder()
-	newRouter().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/health", nil))
-	if rec.Header().Get("X-Request-Id") == "" {
-		t.Error("request id header not set")
+	h.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/users",
+		strings.NewReader(`{"name":"Grace","email":"grace@example.com"}`)))
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("POST status = %d, want 201", rec.Code)
+	}
+	if loc := rec.Header().Get("Location"); loc != "/users/2" {
+		t.Fatalf("Location = %q, want /users/2", loc)
+	}
+
+	rec = httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest(http.MethodDelete, "/users/1", nil))
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("DELETE status = %d, want 204", rec.Code)
+	}
+	if rec.Body.Len() != 0 {
+		t.Fatalf("204 body not empty: %q", rec.Body.String())
 	}
 }

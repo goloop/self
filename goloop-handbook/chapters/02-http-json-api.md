@@ -4,10 +4,10 @@
 
 # 02. A JSON HTTP API without a framework
 
-**Task.** Serve JSON over HTTP: route requests, read path parameters, return
-the right status codes, and wrap everything in the usual cross-cutting concerns
-(a request id, panic recovery, logging, security headers) - without adopting a
-web framework.
+**Task.** Serve JSON over HTTP: route requests, read path parameters, return the
+right status codes for reads and writes, and wrap everything in the usual
+cross-cutting concerns (a request id, panic recovery, logging, security
+headers) - plus one of your own - without adopting a web framework.
 
 **Modules.** [`mux`](https://github.com/goloop/mux) routes (a thin layer over
 `net/http.ServeMux`), [`resp`](https://github.com/goloop/resp) writes JSON and
@@ -16,16 +16,11 @@ chain of `func(http.Handler) http.Handler` wrappers.
 
 **Recipe.** [`recipes/002-http-json-api`](../recipes/002-http-json-api/)
 
-## The idea
+## Example A - routing and JSON
 
 Go's `net/http` already routes, and since Go 1.22 its `ServeMux` understands
-method and wildcard patterns like `GET /users/{id}`. What it does not give you
-is the small ergonomics on top: a one-liner to write JSON, a clean error body,
-and a tidy way to stack middleware. GoLoop adds exactly those, and nothing that
-hides `net/http` underneath.
-
-Routing with `mux` reads like the standard patterns, because they *are* the
-standard patterns:
+`GET /users/{id}` patterns. `mux` adds the small ergonomics on top; `resp`
+writes the JSON:
 
 ```go
 r := mux.New()
@@ -35,7 +30,7 @@ r.Get("/health", func(w http.ResponseWriter, _ *http.Request) {
 })
 
 r.Get("/users/{id}", func(w http.ResponseWriter, req *http.Request) {
-	u, ok := users[atoi(mux.Param(req, "id"))]
+	u, ok := s.get(atoi(mux.Param(req, "id")))
 	if !ok {
 		_ = resp.Error(w, http.StatusNotFound, "user not found")
 		return
@@ -44,67 +39,101 @@ r.Get("/users/{id}", func(w http.ResponseWriter, req *http.Request) {
 })
 ```
 
-`resp.JSON(w, v)` encodes and writes; `resp.R` is a shorthand `map[string]any`
-for ad-hoc objects; `resp.Error(w, status, message)` writes a consistent error
-body. `mux.Param(req, "id")` reads the wildcard. The `Router` is itself an
+`resp.JSON(w, v)` encodes and writes; `resp.R` is a shorthand `map[string]any`;
+`resp.Error(w, status, message)` writes a consistent error body;
+`mux.Param(req, "id")` reads the wildcard. The `Router` is itself an
 `http.Handler`.
 
-## The middleware chain
+## Example B - the right status for a write
 
-Cross-cutting concerns are plain wrappers, applied outermost-first:
+A read is a `200`. A create should be a `201` with a `Location`; a delete should
+be a `204` with an empty body. `resp` has both:
 
 ```go
+r.Post("/users", func(w http.ResponseWriter, req *http.Request) {
+	var in user
+	if err := json.NewDecoder(req.Body).Decode(&in); err != nil {
+		_ = resp.Error(w, http.StatusBadRequest, "invalid JSON body")
+		return
+	}
+	u := s.add(in)
+	_ = resp.Created(w, "/users/"+strconv.Itoa(u.ID), u) // 201 + Location
+})
+
+r.Delete("/users/{id}", func(w http.ResponseWriter, req *http.Request) {
+	if !s.del(atoi(mux.Param(req, "id"))) {
+		_ = resp.Error(w, http.StatusNotFound, "user not found")
+		return
+	}
+	_ = resp.NoContent(w) // 204, empty body
+})
+```
+
+## Example C - your own middleware in the chain
+
+Cross-cutting concerns are plain wrappers, applied outermost-first. A custom one
+needs no special interface - it is just `func(http.Handler) http.Handler`:
+
+```go
+func apiVersion(v string) middlewares.Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("X-API-Version", v)
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 return middlewares.Handler(r,
-	middlewares.RequestID(),       // tag each request with an id
-	middlewares.Recoverer(),       // turn a panic into a 500, not a crash
-	middlewares.Logger(),          // one structured log line per request
-	middlewares.SecurityHeaders(), // nosniff, frame options, and friends
+	middlewares.RequestID(),
+	middlewares.Recoverer(),
+	middlewares.Logger(),
+	middlewares.SecurityHeaders(),
+	apiVersion("v1"), // yours, in the same list
 )
 ```
 
-Because each middleware is just `func(http.Handler) http.Handler`, your own fit
-in the same list, and nothing here is GoLoop-specific plumbing.
-
 ## Execution report
 
-Tested with `httptest` (no network), then deployed and hit with `curl`:
+Tested with `httptest`, then deployed and hit with `curl`:
 
 ```text
 $ go test ./...
-INFO http request method=GET path=/health   status=200 bytes=16 ...
-INFO http request method=GET path=/users/1   status=200 bytes=48 ...
-INFO http request method=GET path=/users/999 status=404 bytes=40 ...
-ok  	goloop.one/handbook/002-http-json-api	0.003s
+ok  	goloop.one/handbook/002-http-json-api	0.004s
 
 $ ./api &                        # deployed on :8081
 
-$ curl -i localhost:8081/health
+$ curl -D - -o /dev/null localhost:8081/health
 HTTP/1.1 200 OK
+X-Api-Version: v1
 X-Content-Type-Options: nosniff
-X-Request-Id: 53941dbe3ef91b6ca0c52360342fc109
-{"status":"ok"}
+X-Request-Id: 5fdbdc2b60e7ee66b91294605c3e0a2b
 
-$ curl localhost:8081/users/1
-{"id":1,"name":"Ada","email":"ada@example.com"}
+$ curl -D - -X POST localhost:8081/users -d '{"name":"Grace","email":"grace@example.com"}'
+HTTP/1.1 201 Created
+Location: /users/2
+{"id":2,"name":"Grace","email":"grace@example.com"}
 
-$ curl -w 'HTTP %{http_code}\n' localhost:8081/users/999
-{"code":404,"message":"user not found"}
+$ curl -w 'HTTP %{http_code} bytes=%{size_download}\n' -X DELETE localhost:8081/users/1
+HTTP 204 bytes=0
+
+$ curl -w 'HTTP %{http_code}\n' localhost:8081/users/1   # after the delete
 HTTP 404
 ```
 
-Every response carries the security header and a request id, the path parameter
-resolves, and the missing user returns a clean `404` JSON body - the tests
-assert all three, and the live `curl` confirms them.
+Every response carries the security header, the request id and your
+`X-Api-Version`. The create returns `201` with `Location: /users/2`; the delete
+returns `204` with no body; and the deleted user is then `404`.
 
 ## What you learned
 
 - `mux` routes with the standard `GET /path/{id}` patterns; the router is an
   `http.Handler`.
-- `resp.JSON`, `resp.R` and `resp.Error` cover the JSON and error responses you
-  write over and over.
-- `middlewares.Handler(h, ...)` stacks concerns as ordinary `net/http`
-  wrappers; your own middleware drops into the same list.
-- Test handlers with `httptest`; the recipe does both that and a live `curl`.
+- `resp.JSON`/`resp.R`/`resp.Error` cover reads; `resp.Created` (201 +
+  Location) and `resp.NoContent` (204) cover writes.
+- `middlewares.Handler(h, ...)` stacks concerns; your own middleware is just a
+  `func(http.Handler) http.Handler` in the same list.
+- Test with `httptest`; the recipe does that and a live `curl`.
 
 Next: make sure the data coming *in* is clean before you trust it.
 
