@@ -1,0 +1,6 @@
+github.com/goloop/middlewares v0.1.1 h1:27xHXukQFTPno5O6kl177PSROIe+2kSsVK05+EMWcMo=
+github.com/goloop/middlewares v0.1.1/go.mod h1:kCPaHYQaALTs9ZFIBLoUG1/V5QayK+3XLqaDLaL19yo=
+github.com/goloop/mux v0.2.0 h1:WEKNXL2Q2SzZkchNvKEZP5PdRXYxZ/d1/O8SAwftI58=
+github.com/goloop/mux v0.2.0/go.mod h1:0/cRVYJd6MBqA/5KGY/U2Oz+74VBrCjcBxBcNiDmyGY=
+github.com/goloop/resp/v2 v2.2.0 h1:whWDUxgnHAxWgANjuUMHb7BNT3gYekE5wJqeZhvU4U8=
+github.com/goloop/resp/v2 v2.2.0/go.mod h1:+rlKejpOx3NiT4mf7etAIOfKulrDZcnxiX8W9KkhhR4=
