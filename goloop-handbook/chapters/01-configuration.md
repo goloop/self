@@ -5,24 +5,20 @@
 # 01. Configuration you can operate
 
 **Task.** Read the service's settings from a `.env` file during local
-development, let real environment variables win in production, and let
-command-line flags win over both - with sensible defaults when nothing is set.
-Keep secrets off the command line.
+development, let real environment variables win in production, and let flags win
+over both, with sensible defaults when nothing is set. Keep secrets off the
+command line.
 
 **Modules.** [`env`](https://github.com/goloop/env) reads `.env` files and the
-environment into a struct; [`opt`](https://github.com/goloop/opt) parses
-command-line flags into the *same* struct.
+environment into a struct; [`opt`](https://github.com/goloop/opt) parses flags
+into the *same* struct.
 
 **Recipe.** [`recipes/001-configuration`](../recipes/001-configuration/)
 
-## The idea
+## The configuration struct
 
-Configuration is the first thing every service needs and the first thing people
-get wrong: a `.env` that must exist or the program crashes, flags that do not
-line up with environment variables, secrets that end up in a shell history.
-
-GoLoop treats the whole configuration as one plain struct. Each field says
-where its value can come from, in three tags:
+Describe the whole configuration once, as a plain struct. Each field says where
+its value can come from, in three tags:
 
 ```go
 type Config struct {
@@ -35,15 +31,11 @@ type Config struct {
 }
 ```
 
-- `env` names the environment variable.
-- `def` is the built-in default.
-- `opt` names the command-line flag; `opt:"-"` means "never a flag", which is
-  how `Secret` stays out of `--help` and shell history.
+`env` names the environment variable, `def` is the default, `opt` names the
+flag. `opt:"-"` means "never a flag", which keeps `Secret` out of `--help` and
+shell history. The field types are ordinary Go types, parsed for you.
 
-The field types are ordinary Go types - `time.Duration` and `bool` and `int`
-are parsed for you.
-
-## Layering the sources
+## Example A - layer the sources
 
 Priority is just the order you apply the sources, lowest first:
 
@@ -54,7 +46,6 @@ func load(args []string) (Config, error) {
 	if err := env.LoadSafe(); err != nil {
 		return Config{}, fmt.Errorf("loading .env: %w", err)
 	}
-
 	var cfg Config
 	if err := env.Unmarshal(&cfg); err != nil { // defaults + environment
 		return Config{}, fmt.Errorf("environment: %w", err)
@@ -66,46 +57,66 @@ func load(args []string) (Config, error) {
 }
 ```
 
-`env.LoadSafe` is the quiet hero here: `env.Load` fails if the named file is
-missing, which forces every caller to guard it with `os.Stat`. `LoadSafe` skips
-a missing file and still reports real parse errors, which is exactly the
-"read `.env` if it is there" behavior you want.
+`env.LoadSafe` is the quiet hero: `env.Load` fails when the named file is
+missing, which forces every caller to guard it. `LoadSafe` skips a missing file
+and still reports real parse errors, which is exactly the "read `.env` if it is
+there" behavior you want.
+
+## Example B - parse a snippet into a map
+
+Sometimes you do not want a struct, only the key/value pairs. `env.Parse` reads
+`.env` text from any `io.Reader` into a `map[string]string`:
+
+```go
+m, _ := env.Parse(strings.NewReader("HOST=db.internal\nPORT=5432\n# a comment\nTAGS=a,b,c\n"))
+// m["HOST"] == "db.internal", comments ignored
+```
+
+## Example C - write the struct back out
+
+`env.MarshalWriter` turns a struct back into `.env` lines, handy for generating
+a template. Note it writes *every* field, including `Secret`, so redact secrets
+before sharing a generated file.
+
+```go
+var b strings.Builder
+_ = env.MarshalWriter(&b, cfg) // APP_ADDR=:8080\nAPP_ENV=...\n
+```
 
 ## Execution report
 
-Built, tested, and run four times to show the priority order (`go test ./...`
-then `go run .` with different sources):
+Tested, then run once with a `.env` present and a flag set:
 
 ```text
 $ go test ./...
 ok  	goloop.one/handbook/001-configuration	0.002s
 
-$ go run .                       # defaults only
-addr=:8080 env=dev timeout=15s debug=false replicas=1 secret_set=false
-
-$ printf 'APP_ENV=staging\nAPP_ADDR=:9090\nAPP_SECRET=from-dotenv\n' > .env
-$ go run .                       # the .env file applies
-addr=:9090 env=staging timeout=15s debug=false replicas=1 secret_set=true
-
-$ APP_ENV=prod go run .          # a real env var overrides the .env value
-addr=:9090 env=prod timeout=15s debug=false replicas=1 secret_set=true
-
-$ APP_ENV=prod go run . --env qa --replicas 6 --debug   # a flag overrides all
-addr=:9090 env=qa timeout=15s debug=true replicas=6 secret_set=true
+$ printf 'APP_ENV=staging\nAPP_SECRET=from-dotenv\n' > .env
+$ go run . --replicas 4
+A. layered config (defaults < .env/env < flags):
+   addr=:8080 env=staging timeout=15s debug=false replicas=4 secret_set=true
+B. parse a .env snippet into a map (no struct):
+   HOST=db.internal PORT=5432 TAGS=a,b,c
+C. marshal the struct back to .env lines (a template):
+   APP_ADDR=:8080
+   APP_ENV=staging
+   APP_TIMEOUT=15s
+   APP_DEBUG=false
+   APP_SECRET=from-dotenv
+   APP_REPLICAS=4
 ```
 
-Read the four runs top to bottom and you can see the ladder: defaults, then
-`.env`, then the real environment beating the `.env`, then a flag beating
-everything. `secret_set=true` from the `.env` onward, and `APP_SECRET` never
-appears as a flag.
+In A, `env=staging` came from the `.env`, `replicas=4` from the flag, and the
+secret was read but never printed. In C the same struct round-trips to `.env`
+lines (and yes, `APP_SECRET` is in there, which is the reminder to redact).
 
 ## What you learned
 
 - Describe configuration **once**, as a struct with `env`/`def`/`opt` tags.
 - Apply sources lowest-priority first: `env.LoadSafe` -> `env.Unmarshal` ->
-  `opt.UnmarshalArgs`.
-- Use `opt:"-"` for secrets so they are read from the environment only.
-- `LoadSafe` makes the same binary run in dev and prod without a code change.
+  `opt.UnmarshalArgs`; use `opt:"-"` for secrets.
+- `env.Parse` reads a snippet into a map when you do not want a struct.
+- `env.MarshalWriter` writes a struct back to `.env` lines (redact secrets).
 
 Next: serve something over HTTP.
 

@@ -41,3 +41,28 @@ func TestEnvThenFlags(t *testing.T) {
 		t.Errorf("secret from env = %q", cfg.Secret)
 	}
 }
+
+// TestParseSnippet checks example B: parsing .env text into a map.
+func TestParseSnippet(t *testing.T) {
+	m, err := envParse("HOST=db\nPORT=5432\n# note\nTAGS=a,b\n")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m["HOST"] != "db" || m["PORT"] != "5432" || m["TAGS"] != "a,b" {
+		t.Fatalf("parsed map = %v", m)
+	}
+}
+
+// TestMarshalRoundTrip checks example C: writing a struct back to .env lines
+// that parse into the same values.
+func TestMarshalRoundTrip(t *testing.T) {
+	in := Config{Addr: ":9000", Env: "prod", Replicas: 3, Debug: true}
+	text := marshalEnv(in)
+	m, err := envParse(text)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m["APP_ADDR"] != ":9000" || m["APP_ENV"] != "prod" || m["APP_REPLICAS"] != "3" {
+		t.Fatalf("round-trip lost values: %q -> %v", text, m)
+	}
+}

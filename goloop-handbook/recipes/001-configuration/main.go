@@ -1,14 +1,19 @@
 // Recipe 001: configuration that a person can actually operate.
 //
-// The task: read settings from a .env file for local development, let real
-// environment variables win in production, and let command-line flags win over
-// both - with sane defaults when nothing is set. This is the first thing every
-// service needs, and goloop does it with two small modules and a plain struct.
+// Three examples, from the everyday to the useful extras:
+//
+//	A. layered config - defaults, then .env and the environment, then flags;
+//	B. read a snippet - parse .env text into a map without a struct;
+//	C. write it back  - marshal a struct out as .env lines (a template).
+//
+// The modules: env reads .env files and the environment; opt parses flags into
+// the same struct.
 package main
 
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/goloop/env/v2"
@@ -34,8 +39,21 @@ func main() {
 		fmt.Fprintln(os.Stderr, "config:", err)
 		os.Exit(1)
 	}
-	fmt.Printf("addr=%s env=%s timeout=%s debug=%v replicas=%d secret_set=%v\n",
+
+	fmt.Println("A. layered config (defaults < .env/env < flags):")
+	fmt.Printf("   addr=%s env=%s timeout=%s debug=%v replicas=%d secret_set=%v\n",
 		cfg.Addr, cfg.Env, cfg.Timeout, cfg.Debug, cfg.Replicas, cfg.Secret != "")
+
+	fmt.Println("B. parse a .env snippet into a map (no struct):")
+	m, _ := env.Parse(strings.NewReader("HOST=db.internal\nPORT=5432\n# a comment\nTAGS=a,b,c\n"))
+	fmt.Printf("   HOST=%s PORT=%s TAGS=%s\n", m["HOST"], m["PORT"], m["TAGS"])
+
+	fmt.Println("C. marshal the struct back to .env lines (a template):")
+	var b strings.Builder
+	_ = env.MarshalWriter(&b, cfg)
+	for _, line := range strings.Split(strings.TrimSpace(b.String()), "\n") {
+		fmt.Printf("   %s\n", line)
+	}
 }
 
 // load builds the configuration by layering three sources, lowest priority
