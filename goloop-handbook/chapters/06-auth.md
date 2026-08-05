@@ -113,7 +113,7 @@ it drops in without either package importing the other:
 
 ```go
 var hasher auth.PasswordHasher = argon2id.New() // memory-hard, recommended
-encoded, _ := hasher.Hash([]byte(password))     // $argon2id$v=19$m=65536,t=1,p=4$...
+encoded, _ := hasher.Hash([]byte(password))     // $argon2id$v=19$m=65536,t=2,p=1$...
 ok := hasher.Verify(encoded, []byte(attempt)) == nil
 ```
 

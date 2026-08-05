@@ -1,6 +1,6 @@
-github.com/goloop/ai v0.3.0 h1:w+SJZZjBvyY0TINKJKOm1kII/EEzyFVv65hPjjAr8Y4=
-github.com/goloop/ai v0.3.0/go.mod h1:7uZ4LN96OaYwuVqrHyzjXSUTk4PV6c7fdH9OHvhAh7I=
-github.com/goloop/anthropic v0.2.0 h1:wzpLEHqvqb7pjlBO5W5Xxu+drzbAVjrt8U3ImXTuv5M=
-github.com/goloop/anthropic v0.2.0/go.mod h1:QIEXjA6lmuZPbH1PIqqroZeXY6BxTcWppitdtxGdV9I=
-github.com/goloop/openai v0.2.0 h1:WEQ1Rkn53hJ5RacQL+mb96TW09DuG2Edyc+NbH4gKJI=
-github.com/goloop/openai v0.2.0/go.mod h1:rbSpEpSUczEkdVjHhnOj7inrKr39pz/K2mVL/iVEXj8=
+github.com/goloop/ai v0.4.1 h1:Ne9bde93QWbPneMl3vHWobCVj7gw0qC6d8SQIFnxJVI=
+github.com/goloop/ai v0.4.1/go.mod h1:7uZ4LN96OaYwuVqrHyzjXSUTk4PV6c7fdH9OHvhAh7I=
+github.com/goloop/anthropic v0.3.1 h1:2cK+PVXQJBWV25Oqwlqi0aJXT3SDv9+pSUMujijIdOM=
+github.com/goloop/anthropic v0.3.1/go.mod h1:S3CHwZIEstIqnmE7Szy0/3hTYffbhtufUFeZkv+CRCU=
+github.com/goloop/openai v0.3.0 h1:y85K61VTbv7NkG6BLWMVpXobHrA+24LJuigId/370BY=
+github.com/goloop/openai v0.3.0/go.mod h1:IXbbt6/BOH3yMEyETfLienvmxbwjzLoGxvFrgF3YSB0=

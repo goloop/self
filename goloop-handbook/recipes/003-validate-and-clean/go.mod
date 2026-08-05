@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/goloop/is/v2 v2.3.1
-	github.com/goloop/norm v0.4.0
+	github.com/goloop/norm v1.0.0
 )
 
 require (
