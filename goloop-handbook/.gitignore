@@ -12,5 +12,10 @@ recipes/009-websocket/009-websocket
 recipes/010-whole-stack/010-whole-stack
 recipes/010-whole-stack/notes
 recipes/010-whole-stack/pgc
+recipes/011-hardened-signin/011-hardened-signin
+recipes/012-refresh-lifecycle/012-refresh-lifecycle
+recipes/013-reverse-proxy/013-reverse-proxy
+recipes/014-ai-production/014-ai-production
+recipes/015-error-slugs/015-error-slugs
 recipes/**/*.log
 recipes/**/.env
