@@ -1,9 +1,9 @@
-github.com/goloop/argon2id v1.0.0 h1:RM1IgWqD6rZCGjzQWkAggC/4OkApBsNLcxIh7iSMdDs=
-github.com/goloop/argon2id v1.0.0/go.mod h1:K6CcSXZbhvQkTgradenfkGFMTGohe/FVB9Ij/G3Y4TY=
-github.com/goloop/auth v0.3.0 h1:ATF7gzJXRz5wDIlnIzTJwb6G5uK0jG8il7UQuLcJPPI=
-github.com/goloop/auth v0.3.0/go.mod h1:6iWjvk/whHTM2M5JPtqcuNAelTIbP9QOheKGBtWxMdc=
-github.com/goloop/jwt v1.0.0 h1:okBngdXlP8onZfeT9R8R/vaA5ZMAlM8/zbP29vXKdpQ=
-github.com/goloop/jwt v1.0.0/go.mod h1:fGj5uWlhx4GVoiEbPTDGIlEDWHoKM0gTyZOrAkcGOow=
+github.com/goloop/argon2id v1.1.1 h1:s4S/pwD8eOMU1GNoxDo7P9BbyyWLzCmuNcsH5PtyRjw=
+github.com/goloop/argon2id v1.1.1/go.mod h1:K6CcSXZbhvQkTgradenfkGFMTGohe/FVB9Ij/G3Y4TY=
+github.com/goloop/auth v0.7.1 h1:irOBNpqulWA9uMwjDz3PF5DSJ1C8yQX3cXJE/pJav0E=
+github.com/goloop/auth v0.7.1/go.mod h1:IYXSklKkRrImI9uN5ttkEwdiiEakow91N7uwcn8cEMM=
+github.com/goloop/jwt v1.1.0 h1:3EH94VmWiFo7cUt7d6AmSFkOu2eD9tI5WQYzcBlfpLA=
+github.com/goloop/jwt v1.1.0/go.mod h1:fGj5uWlhx4GVoiEbPTDGIlEDWHoKM0gTyZOrAkcGOow=
 github.com/goloop/key/v2 v2.1.0 h1:AnNZuOi8JcjoFgTs9v6githb9/bZxKYT15qB9ehUz+U=
 github.com/goloop/key/v2 v2.1.0/go.mod h1:ot4b0RkH1kErPsDvrLrl1ZIJfEZGsP6Cfu1cjU6dpKs=
 github.com/goloop/session v0.2.0 h1:BAugssKd+w23Y1Wnxrtx/CY4TNK3zZn/PYTKWrpsdX4=

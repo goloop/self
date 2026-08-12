@@ -1,6 +1,6 @@
-github.com/goloop/ai v0.4.1 h1:Ne9bde93QWbPneMl3vHWobCVj7gw0qC6d8SQIFnxJVI=
-github.com/goloop/ai v0.4.1/go.mod h1:7uZ4LN96OaYwuVqrHyzjXSUTk4PV6c7fdH9OHvhAh7I=
-github.com/goloop/anthropic v0.3.1 h1:2cK+PVXQJBWV25Oqwlqi0aJXT3SDv9+pSUMujijIdOM=
-github.com/goloop/anthropic v0.3.1/go.mod h1:S3CHwZIEstIqnmE7Szy0/3hTYffbhtufUFeZkv+CRCU=
-github.com/goloop/openai v0.3.0 h1:y85K61VTbv7NkG6BLWMVpXobHrA+24LJuigId/370BY=
-github.com/goloop/openai v0.3.0/go.mod h1:IXbbt6/BOH3yMEyETfLienvmxbwjzLoGxvFrgF3YSB0=
+github.com/goloop/ai v1.1.1 h1:H74s+nDIr1+ov7jtiWLvOPNcyNadhlypxRL28VOqQb0=
+github.com/goloop/ai v1.1.1/go.mod h1:7uZ4LN96OaYwuVqrHyzjXSUTk4PV6c7fdH9OHvhAh7I=
+github.com/goloop/anthropic v1.1.2 h1:KBY57isx0QwndjDiAbI0xXO+Lu4plmBOtuyAQBykN5s=
+github.com/goloop/anthropic v1.1.2/go.mod h1:XWcooTwNmGfG54Enj+bgbf5074yf+2ojSjvMoGv+/Xk=
+github.com/goloop/openai v1.1.2 h1:kuI1OM7Vb2Z8o0570WE0aGs9q3DLEPt0IXDpH+HXkeE=
+github.com/goloop/openai v1.1.2/go.mod h1:JuM5JtkiDppTGqCvRZmDslzPHDyHMeQZAw2eUuhpxl8=
