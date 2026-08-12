@@ -1,4 +1,4 @@
-[« Real-time with WebSockets](09-websocket.md) · [Contents](../main.md) · [Contents »](../main.md)
+[« Real-time with WebSockets](09-websocket.md) · [Contents](../main.md) · [A hardened sign-in »](11-hardened-signin.md)
 
 ---
 
@@ -96,4 +96,4 @@ authenticated, stored and answered. Build your own from here.
 
 ---
 
-[« Real-time with WebSockets](09-websocket.md) · [Contents](../main.md) · [Contents »](../main.md)
+[« Real-time with WebSockets](09-websocket.md) · [Contents](../main.md) · [A hardened sign-in »](11-hardened-signin.md)

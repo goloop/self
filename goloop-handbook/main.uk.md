@@ -61,6 +61,23 @@
 - [10. Складаємо все разом](chapters/10-whole-stack.uk.md) - один API на цілому
   стеку GoLoop · рецепт [`010-whole-stack`](recipes/010-whole-stack/)
 
+### Частина IV - Патерни з бойових проєктів
+
+Патерни зі служб, що ганяють увесь стек GoLoop у продакшні. Вони будують на
+модулях Частин I-III, а не вводять нові.
+
+- [11. Вхід, який переживе продакшн](chapters/11-hardened-signin.uk.md) -
+  `env`, `jwt`, `argon2id`, `auth`, `middlewares`, `mux`, `resp`
+  · рецепт [`011-hardened-signin`](recipes/011-hardened-signin/)
+- [12. Життєвий цикл refresh-токена](chapters/12-refresh-lifecycle.uk.md) - `auth`,
+  `auth/authtest` · рецепт [`012-refresh-lifecycle`](recipes/012-refresh-lifecycle/)
+- [13. За зворотним проксі](chapters/13-reverse-proxy.uk.md) - `middlewares`
+  (RealIP, RateLimit, контекст-логер) · рецепт [`013-reverse-proxy`](recipes/013-reverse-proxy/)
+- [14. AI у продакшн-формі](chapters/14-ai-production.uk.md) - `ai`, `anthropic`,
+  `openai` · рецепт [`014-ai-production`](recipes/014-ai-production/)
+- [15. Помилки, на які фронтенд робить switch](chapters/15-error-slugs.uk.md) - `resp`,
+  `qp`, `mux` · рецепт [`015-error-slugs`](recipes/015-error-slugs/)
+
 ## Почніть звідси
 
 Уперше з GoLoop? Почніть із [передмови](chapters/00-preface.uk.md), далі читайте

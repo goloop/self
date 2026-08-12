@@ -1,4 +1,4 @@
-[« Реальний час на WebSocket](09-websocket.uk.md) · [Зміст](../main.uk.md) · [Зміст »](../main.uk.md)
+[« Реальний час на WebSocket](09-websocket.uk.md) · [Зміст](../main.uk.md) · [Вхід, який переживе продакшн »](11-hardened-signin.uk.md)
 
 ---
 
@@ -96,4 +96,4 @@ Signup згорнув `Ada@Example.com` в ідентичність у нижн�
 
 ---
 
-[« Реальний час на WebSocket](09-websocket.uk.md) · [Зміст](../main.uk.md) · [Зміст »](../main.uk.md)
+[« Реальний час на WebSocket](09-websocket.uk.md) · [Зміст](../main.uk.md) · [Вхід, який переживе продакшн »](11-hardened-signin.uk.md)

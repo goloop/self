@@ -60,6 +60,23 @@ running it, so you see exactly what the code does.
 - [10. Putting it together](chapters/10-whole-stack.md) - one API on the whole
   GoLoop stack · recipe [`010-whole-stack`](recipes/010-whole-stack/)
 
+### Part IV - Field patterns
+
+Patterns drawn from services running the whole GoLoop stack in production. These
+build on the modules of Parts I-III rather than introducing new ones.
+
+- [11. A sign-in endpoint that survives production](chapters/11-hardened-signin.md) -
+  `env`, `jwt`, `argon2id`, `auth`, `middlewares`, `mux`, `resp`
+  · recipe [`011-hardened-signin`](recipes/011-hardened-signin/)
+- [12. The refresh-token lifecycle](chapters/12-refresh-lifecycle.md) - `auth`,
+  `auth/authtest` · recipe [`012-refresh-lifecycle`](recipes/012-refresh-lifecycle/)
+- [13. Behind a reverse proxy](chapters/13-reverse-proxy.md) - `middlewares`
+  (RealIP, RateLimit, context logger) · recipe [`013-reverse-proxy`](recipes/013-reverse-proxy/)
+- [14. AI, production shape](chapters/14-ai-production.md) - `ai`, `anthropic`,
+  `openai` · recipe [`014-ai-production`](recipes/014-ai-production/)
+- [15. Errors a frontend can switch on](chapters/15-error-slugs.md) - `resp`,
+  `qp`, `mux` · recipe [`015-error-slugs`](recipes/015-error-slugs/)
+
 ## Start here
 
 New to GoLoop? Begin with the [preface](chapters/00-preface.md), then read Part I

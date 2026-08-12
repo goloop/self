@@ -108,6 +108,50 @@ _ = env.Unmarshal(&need)                 // now nil; need.DatabaseURL is set
 Use `required` for the values a service genuinely cannot start without, and a
 `def` for everything that has a sane fallback.
 
+## Example E - escape the prefix, and validate
+
+Two things a real config needs beyond the tags above.
+
+A nested struct namespaces its fields (`DB DBConfig `env:"DB"`` reads `DB_*`),
+which is usually what you want and occasionally exactly what you cannot have:
+deployments name some variables once and for all. The `absolute` flag names the
+variable in full, ignoring the prefix:
+
+```go
+type Config struct {
+	DB struct {
+		URL      string `env:"DATABASE_URL,absolute"` // reads DATABASE_URL
+		PoolSize int    `env:"POOL_SIZE"`             // reads DB_POOL_SIZE
+	} `env:"DB"`
+}
+```
+
+And `required` covers presence, but not rules that span fields - two secrets
+must differ, a signing key must be long enough. Those live in a `Validate`
+method the application calls at boot, so a misconfiguration refuses to start
+instead of failing on the first request that needs the value:
+
+```go
+func Load() (*Config, error) {
+	_ = env.Load(".env")
+	var c Config
+	if err := env.Unmarshal(&c); err != nil {
+		return nil, err
+	}
+	if err := c.Validate(); err != nil { // your cross-field rules
+		return nil, err
+	}
+	return &c, nil
+}
+```
+
+`Unmarshal` deliberately does not call `Validate` for you: forgetting to write
+the method is as easy as forgetting to call it, and a decoder invoking
+application logic is a surprising thing to debug. The
+[hardened sign-in chapter](11-hardened-signin.md) shows a `Validate` that checks
+the JWT signing key at boot, turning "first login fails in production" into
+"deploy refuses to start".
+
 ## Execution report
 
 Tested, then run once with a `.env` present and a flag set:
@@ -151,6 +195,9 @@ succeeds once provided.
   value mandatory and returns `env.ErrRequired` when it is missing.
 - `env.Parse` reads a snippet into a map when you do not want a struct.
 - `env.MarshalWriter` writes a struct back to `.env` lines (redact secrets).
+- `env:"NAME,absolute"` reads a variable by its full name, ignoring the prefix a
+  nested struct would add; a `Validate` method called at boot covers the
+  cross-field rules a tag cannot.
 
 Next: serve something over HTTP.
 

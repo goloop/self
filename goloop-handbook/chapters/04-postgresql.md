@@ -151,6 +151,16 @@ The insert returned a typed `Note` with the generated id; the reads returned
 transaction added two notes at once (2 -> 4); the rolled-back one left the
 count untouched (4 -> 4), proving the writes were atomic.
 
+## A note on nullable JSON
+
+One field type is worth calling out. A nullable `json` or `jsonb` column is
+generated as `*json.RawMessage` (in the default pointer mode) - a pointer, so a
+SQL `NULL` scans as a nil pointer and a value scans as the bytes. This matters
+because the difference between "no value" and "the value is JSON `null`" is real
+in the database, and the generated code preserves it: reach for a `COALESCE` in
+the query only when you genuinely want to collapse the two. A `NOT NULL` json
+column stays a plain `json.RawMessage`.
+
 ## What you learned
 
 - `pgc` has two command-line jobs: `pgc migrate` (apply the schema) and
@@ -163,6 +173,8 @@ count untouched (4 -> 4), proving the writes were atomic.
   batch lands together, roll back and it never happened.
 - Because the columns are typed in Go, renaming one in a migration breaks the
   build, not production.
+- A nullable `json`/`jsonb` column is a `*json.RawMessage`, so SQL `NULL` and
+  JSON `null` stay distinct.
 
 Part II continues with asking a language model about this data.
 

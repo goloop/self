@@ -176,6 +176,12 @@ at 60s; the refresh token verifies its secret while only its hash is stored; and
 - None of this stores a secret you could leak: hashes, not passwords; signatures,
   not trust.
 
+For hardening these into a production sign-in - boot-time key checks, rate
+limiting, the Argon2id memory budget, timing-safe missing-account handling - see
+[A hardened sign-in](11-hardened-signin.md); for the full refresh-token
+lifecycle, see [The refresh-token lifecycle](12-refresh-lifecycle.md), both in
+Part IV.
+
 Next: readable URLs from any text.
 
 ---
