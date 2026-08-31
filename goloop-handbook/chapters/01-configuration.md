@@ -11,7 +11,8 @@ command line.
 
 **Modules.** [`env`](https://github.com/goloop/env) reads `.env` files and the
 environment into a struct; [`opt`](https://github.com/goloop/opt) parses flags
-into the *same* struct.
+into the *same* struct; [`yaml`](https://github.com/goloop/yaml) reads the
+structured settings that belong in a file rather than in a variable.
 
 **Recipe.** [`recipes/001-configuration`](../recipes/001-configuration/)
 
@@ -152,6 +153,73 @@ application logic is a surprising thing to debug. The
 the JWT signing key at boot, turning "first login fails in production" into
 "deploy refuses to start".
 
+## Example F - the settings that live in a file
+
+Environment variables carry the settings a deployment changes: an address, a
+timeout, a secret. They are a poor home for the settings that have *structure* -
+a list of sources with their tags and quality, a book manifest, a set of routing
+rules. Those belong in a file a person edits and reviews, and that file is
+usually YAML.
+
+[`yaml`](https://github.com/goloop/yaml) reads it with the API you already know
+from `encoding/json`:
+
+```go
+type Source struct {
+	Slug    string   `yaml:"slug"`
+	URL     string   `yaml:"url"`
+	Tags    []string `yaml:"tags,omitempty"`
+	Quality int      `yaml:"quality"`
+}
+
+type Catalog struct {
+	Version int      `yaml:"version"`
+	Sources []Source `yaml:"sources"`
+}
+
+var c Catalog
+if err := yaml.UnmarshalStrict(data, &c); err != nil {
+	return nil, err
+}
+```
+
+Note `UnmarshalStrict` rather than `Unmarshal`. The lenient form skips keys the
+struct does not know, which is right for a document several versions of a
+program must read - and wrong for a file a person maintains by hand, where an
+unknown key is nearly always a typo in a known one:
+
+```go
+const typo = "version: 1\nsourses:\n  - slug: x\n"
+
+yaml.UnmarshalStrict([]byte(typo), &c)
+// yaml: line 2: unknown key "sourses" for main.Catalog
+
+yaml.Unmarshal([]byte(typo), &c)
+// nil, and c.Sources is empty - the catalog silently has no sources
+```
+
+The lenient call is the dangerous one: it returns no error and an empty
+catalog, so the service starts and serves nothing. The error carries the line
+in a typed value, so an editor or a `make check` target can point at it:
+
+```go
+var te *yaml.TypeError
+if errors.As(err, &te) {
+	fmt.Println("line", te.Line) // 2
+}
+```
+
+Two defaults in this package differ from what other YAML readers do, and both
+are deliberate. `yes` and `no` are **strings**, because the YAML 1.2 core schema
+has exactly two booleans - a `bool` field still accepts them, so say what you
+mean in the struct. And a leading zero such as `0644` is **refused**: it meant
+octal under YAML 1.1 and means decimal under 1.2, so the package asks for
+`0o644` or `644` rather than picking one behind your back.
+
+Keep the two sources in their places: the `.env` says *where this deployment
+runs*, the YAML file says *what the product contains*. The first changes per
+environment, the second is reviewed in a pull request.
+
 ## Execution report
 
 Tested, then run once with a `.env` present and a flag set:
@@ -198,6 +266,9 @@ succeeds once provided.
 - `env:"NAME,absolute"` reads a variable by its full name, ignoring the prefix a
   nested struct would add; a `Validate` method called at boot covers the
   cross-field rules a tag cannot.
+- Settings with structure belong in a YAML file, not in a variable: read it with
+  `yaml.UnmarshalStrict`, so a typo in a key is an error with a line number
+  rather than a config that silently lost half of itself.
 
 Next: serve something over HTTP.
 

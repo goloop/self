@@ -85,7 +85,7 @@ stdlib базовою мовою проєкту й додає тільки то�
 
 | Етап | Модулі | Що роблять |
 |------|--------|-----------|
-| **Конфігурація** | `env`, `opt` | Читають `.env`/environment у типізовану структуру config; парсять CLI-прапорці. |
+| **Конфігурація** | `env`, `opt`, `yaml` | Читають `.env`/environment у типізовану структуру config; парсять CLI-прапорці; читають YAML-маніфести й каталоги. |
 | **Життєвий цикл** | `app` | Володіє впорядкованою послідовністю start/stop і graceful shutdown, щоб `main` цього не робив. |
 | **HTTP-край** | `mux`, `middlewares` | Роутять запити поверх `net/http.ServeMux`; додають request ID, real IP, recovery, логування, CORS. |
 | **Handlers** | `qp`, `resp`, `is` | Читають типізовані query-параметри, валідують вхід, пишуть JSON/інші відповіді. |
@@ -202,6 +202,7 @@ func run() error {
 - [**t13n** - Unicode-to-ASCII транслітерація](#t13n)
 - [**trit** - тризначна логіка: False, Unknown, True](#trit)
 - [**websocket** - WebSocket (RFC 6455): клієнт і сервер](#websocket)
+- [**yaml** - конфігураційні файли YAML з API як в encoding/json](#yaml)
 
 **Прикладний ярус**
 
@@ -910,6 +911,53 @@ func echo(w http.ResponseWriter, r *http.Request) {
 
 **Детальніше:** [github.com/goloop/websocket](https://github.com/goloop/websocket) · [довідник](https://pkg.go.dev/github.com/goloop/websocket)
 
+## yaml
+
+`yaml` читає й пише де-факто конфігураційний формат YAML з API як в
+`encoding/json`: `Marshal`, `Unmarshal`, теги полів та інтерфейси
+`encoding.TextMarshaler` / `TextUnmarshaler`. Він покриває те, з чого
+складаються конфігураційні файли, маніфести й фікстури - блокові та flow-
+колекції, усі стилі скалярів, блокові скаляри, анкори, аліаси й merge-ключі
+`<<` - а решту відхиляє поіменно, замість вгадувати.
+
+Скаляри резолвляться за core-схемою YAML 1.2, тож `yes` і `no` - рядки, а
+ведучий нуль на кшталт `0644` відхиляється як неоднозначний, замість тихо
+стати вісімковим або десятковим. `UnmarshalStrict` робить із невідомого ключа
+помилку - саме те, що потрібно файлу, який ведуть руками. Помилки типізовані й
+несуть номер рядка, тож редактор може вказати на місце.
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/goloop/yaml"
+)
+
+type Config struct {
+	Name    string   `yaml:"name"`
+	Port    int      `yaml:"port"`
+	Sources []string `yaml:"sources,omitempty"`
+}
+
+func main() {
+	var c Config
+	if err := yaml.UnmarshalStrict([]byte("name: catalog\nport: 8080\n"), &c); err != nil {
+		log.Fatal(err) // *yaml.SyntaxError або *yaml.TypeError, з полем Line
+	}
+
+	out, err := yaml.Marshal(c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Print(string(out))
+}
+```
+
+**Детальніше:** [github.com/goloop/yaml](https://github.com/goloop/yaml) · [довідник](https://pkg.go.dev/github.com/goloop/yaml)
+
 ## app
 
 `app` - невелике ядро життєвого циклу й композиції: воно володіє послідовністю
@@ -1194,7 +1242,8 @@ goloop version         вивести версію CLI
 
 ## Як обрати
 
-Використовуйте `env` і `opt` на старті програми, `mux`, `middlewares`, `qp` і
+Використовуйте `env` і `opt` на старті програми, `yaml` для маніфестів і
+каталогів, які сервіс читає з диска, `mux`, `middlewares`, `qp` і
 `resp` у HTTP handlers, `websocket` для realtime-з'єднань, `ai` щоб говорити до
 LLM-провайдерів за одним інтерфейсом, `pgc` щоб компілювати свій SQL у
 типізований Go проти PostgreSQL, `is` для валідації, `log` для operational

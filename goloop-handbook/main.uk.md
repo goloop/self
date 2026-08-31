@@ -35,7 +35,7 @@
 ### Частина I - по одному модулю за раз
 
 - [01. Конфігурація, якою можна керувати](chapters/01-configuration.uk.md) -
-  `env`, `opt` · рецепт [`001-configuration`](recipes/001-configuration/)
+  `env`, `opt`, `yaml` · рецепт [`001-configuration`](recipes/001-configuration/)
 - [02. JSON HTTP API без фреймворка](chapters/02-http-json-api.uk.md) -
   `mux`, `resp`, `middlewares` · рецепт [`002-http-json-api`](recipes/002-http-json-api/)
 - [03. Валідація й чистка вводу](chapters/03-validate-and-clean.uk.md) -

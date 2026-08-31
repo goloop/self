@@ -33,7 +33,7 @@ running it, so you see exactly what the code does.
 
 ### Part I - One module at a time
 
-- [01. Configuration you can operate](chapters/01-configuration.md) - `env`, `opt`
+- [01. Configuration you can operate](chapters/01-configuration.md) - `env`, `opt`, `yaml`
   · recipe [`001-configuration`](recipes/001-configuration/)
 - [02. A JSON HTTP API without a framework](chapters/02-http-json-api.md) -
   `mux`, `resp`, `middlewares` · recipe [`002-http-json-api`](recipes/002-http-json-api/)

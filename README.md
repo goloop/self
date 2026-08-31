@@ -85,7 +85,7 @@ leaves open:
 
 | Stage | Modules | What they do |
 |-------|---------|--------------|
-| **Configuration** | `env`, `opt` | Read `.env`/environment into a typed config struct; parse CLI flags. |
+| **Configuration** | `env`, `opt`, `yaml` | Read `.env`/environment into a typed config struct; parse CLI flags; read YAML manifests and catalogs. |
 | **Lifecycle** | `app` | Own the ordered start/stop sequence and graceful shutdown so `main` does not. |
 | **HTTP edge** | `mux`, `middlewares` | Route requests over `net/http.ServeMux`; add request IDs, real IP, recovery, logging, CORS. |
 | **Handlers** | `qp`, `resp`, `is` | Read typed query parameters, validate input, write JSON/other responses. |
@@ -201,6 +201,7 @@ See [Building a service](#building-a-service) for how they fit together.
 - [**t13n** - Unicode-to-ASCII transliteration](#t13n)
 - [**trit** - three-valued logic: False, Unknown, True](#trit)
 - [**websocket** - RFC 6455 WebSocket client and server](#websocket)
+- [**yaml** - YAML configuration files with the encoding/json API](#yaml)
 
 **Application**
 
@@ -906,6 +907,53 @@ func echo(w http.ResponseWriter, r *http.Request) {
 
 **Learn more:** [github.com/goloop/websocket](https://github.com/goloop/websocket) · [reference](https://pkg.go.dev/github.com/goloop/websocket)
 
+## yaml
+
+`yaml` reads and writes the de-facto YAML configuration format with the API of
+`encoding/json`: `Marshal`, `Unmarshal`, struct tags, and the
+`encoding.TextMarshaler` / `TextUnmarshaler` interfaces. It covers what
+configuration files, manifests and fixtures are made of - block and flow
+collections, every scalar style, block scalars, anchors, aliases and `<<` merge
+keys - and refuses the rest by name instead of guessing.
+
+Scalars resolve by the YAML 1.2 core schema, so `yes` and `no` are strings and
+a leading zero such as `0644` is refused as ambiguous rather than silently read
+as octal or decimal. `UnmarshalStrict` turns an unknown key into an error,
+which is what a hand-edited file wants. Errors are typed and carry the line
+number, so an editor can point at the mistake.
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/goloop/yaml"
+)
+
+type Config struct {
+	Name    string   `yaml:"name"`
+	Port    int      `yaml:"port"`
+	Sources []string `yaml:"sources,omitempty"`
+}
+
+func main() {
+	var c Config
+	if err := yaml.UnmarshalStrict([]byte("name: catalog\nport: 8080\n"), &c); err != nil {
+		log.Fatal(err) // *yaml.SyntaxError or *yaml.TypeError, with a Line
+	}
+
+	out, err := yaml.Marshal(c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Print(string(out))
+}
+```
+
+**Learn more:** [github.com/goloop/yaml](https://github.com/goloop/yaml) · [reference](https://pkg.go.dev/github.com/goloop/yaml)
+
 ## app
 
 `app` is a small lifecycle and composition kernel: it owns the start/stop
@@ -1189,7 +1237,8 @@ goloop version         print the CLI version
 
 ## How to choose
 
-Use `env` and `opt` at program startup, `mux`, `middlewares`, `qp` and `resp`
+Use `env` and `opt` at program startup, `yaml` for the manifests and
+catalogs a service reads from disk, `mux`, `middlewares`, `qp` and `resp`
 in HTTP handlers, `websocket` for realtime connections, `ai` to talk to LLM
 providers behind one interface, `pgc` to compile your SQL into typed Go
 against PostgreSQL, `is` for validation, `log` for operational output, `set`
