@@ -131,11 +131,6 @@ D. the catalog the frontend switches on:
   silent default.
 - Keep the slugs in one catalog - it is the contract the frontend shares.
 
-This closes Part IV. You have taken the modules of Parts I-III and shaped them
-the way production shapes them: fail early, refuse honestly, resolve the real
-client, ask what a provider can do, and answer in a vocabulary a frontend can act
-on.
-
 ---
 
-[« AI, production shape](14-ai-production.md) · [Contents](../main.md)
+[« AI, production shape](14-ai-production.md) · [Contents](../main.md) · [A catalog people edit by hand »](16-yaml-catalog.md)

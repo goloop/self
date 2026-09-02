@@ -76,6 +76,8 @@ build on the modules of Parts I-III rather than introducing new ones.
   `openai` · recipe [`014-ai-production`](recipes/014-ai-production/)
 - [15. Errors a frontend can switch on](chapters/15-error-slugs.md) - `resp`,
   `qp`, `mux` · recipe [`015-error-slugs`](recipes/015-error-slugs/)
+- [16. A catalog people edit by hand](chapters/16-yaml-catalog.md) - `yaml`
+  · recipe [`016-yaml-catalog`](recipes/016-yaml-catalog/)
 
 ## Start here
 

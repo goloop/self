@@ -77,6 +77,8 @@
   `openai` · рецепт [`014-ai-production`](recipes/014-ai-production/)
 - [15. Помилки, на які фронтенд робить switch](chapters/15-error-slugs.uk.md) - `resp`,
   `qp`, `mux` · рецепт [`015-error-slugs`](recipes/015-error-slugs/)
+- [16. Каталог, який ведуть руками](chapters/16-yaml-catalog.uk.md) - `yaml`
+  · рецепт [`016-yaml-catalog`](recipes/016-yaml-catalog/)
 
 ## Почніть звідси
 
