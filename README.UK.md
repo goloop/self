@@ -922,9 +922,14 @@ func echo(w http.ResponseWriter, r *http.Request) {
 
 Скаляри резолвляться за core-схемою YAML 1.2, тож `yes` і `no` - рядки, а
 ведучий нуль на кшталт `0644` відхиляється як неоднозначний, замість тихо
-стати вісімковим або десятковим. `UnmarshalStrict` робить із невідомого ключа
+стати вісімковим або десятковим. `WithStrict` робить із невідомого ключа
 помилку - саме те, що потрібно файлу, який ведуть руками. Помилки типізовані й
 несуть номер рядка, тож редактор може вказати на місце.
+
+Тег `def` заповнює ключ, який файл пропустив, а `,required` відхиляє той, який
+файл мав задати; `time.Duration`, `time.Time` і `url.URL` читаються з того
+тексту, який написала б людина; а `WithExpand` підставляє `${NAME}` із
+середовища, не зачіпаючи форму документа.
 
 ```go
 package main
@@ -932,19 +937,22 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/goloop/yaml"
 )
 
 type Config struct {
-	Name    string   `yaml:"name"`
-	Port    int      `yaml:"port"`
-	Sources []string `yaml:"sources,omitempty"`
+	Name    string        `yaml:"name"`
+	Port    int           `yaml:"port" def:"8080"`
+	Timeout time.Duration `yaml:"timeout" def:"30s"`
+	Sources []string      `yaml:"sources,omitempty"`
 }
 
 func main() {
 	var c Config
-	if err := yaml.UnmarshalStrict([]byte("name: catalog\nport: 8080\n"), &c); err != nil {
+	if err := yaml.Unmarshal([]byte("name: catalog\n"), &c,
+		yaml.WithStrict()); err != nil {
 		log.Fatal(err) // *yaml.SyntaxError або *yaml.TypeError, з полем Line
 	}
 

@@ -918,9 +918,14 @@ keys - and refuses the rest by name instead of guessing.
 
 Scalars resolve by the YAML 1.2 core schema, so `yes` and `no` are strings and
 a leading zero such as `0644` is refused as ambiguous rather than silently read
-as octal or decimal. `UnmarshalStrict` turns an unknown key into an error,
-which is what a hand-edited file wants. Errors are typed and carry the line
-number, so an editor can point at the mistake.
+as octal or decimal. `WithStrict` turns an unknown key into an error, which is
+what a hand-edited file wants. Errors are typed and carry the line number, so
+an editor can point at the mistake.
+
+A `def` tag fills a key the file leaves out and `,required` refuses one it
+should have set; `time.Duration`, `time.Time` and `url.URL` are read from the
+text a person would write; and `WithExpand` substitutes `${NAME}` from the
+environment without touching the shape of the document.
 
 ```go
 package main
@@ -928,19 +933,22 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/goloop/yaml"
 )
 
 type Config struct {
-	Name    string   `yaml:"name"`
-	Port    int      `yaml:"port"`
-	Sources []string `yaml:"sources,omitempty"`
+	Name    string        `yaml:"name"`
+	Port    int           `yaml:"port" def:"8080"`
+	Timeout time.Duration `yaml:"timeout" def:"30s"`
+	Sources []string      `yaml:"sources,omitempty"`
 }
 
 func main() {
 	var c Config
-	if err := yaml.UnmarshalStrict([]byte("name: catalog\nport: 8080\n"), &c); err != nil {
+	if err := yaml.Unmarshal([]byte("name: catalog\n"), &c,
+		yaml.WithStrict()); err != nil {
 		log.Fatal(err) // *yaml.SyntaxError or *yaml.TypeError, with a Line
 	}
 

@@ -178,25 +178,43 @@ type Catalog struct {
 }
 
 var c Catalog
-if err := yaml.UnmarshalStrict(data, &c); err != nil {
+if err := yaml.Unmarshal(data, &c, yaml.WithStrict()); err != nil {
 	return nil, err
 }
 ```
 
-Note `UnmarshalStrict` rather than `Unmarshal`. The lenient form skips keys the
-struct does not know, which is right for a document several versions of a
-program must read - and wrong for a file a person maintains by hand, where an
-unknown key is nearly always a typo in a known one:
+Note `yaml.WithStrict()`. Without it the decoder skips keys the struct does not
+know, which is right for a document several versions of a program must read -
+and wrong for a file a person maintains by hand, where an unknown key is nearly
+always a typo in a known one:
 
 ```go
 const typo = "version: 1\nsourses:\n  - slug: x\n"
 
-yaml.UnmarshalStrict([]byte(typo), &c)
+yaml.Unmarshal([]byte(typo), &c, yaml.WithStrict())
 // yaml: line 2: unknown key "sourses" for main.Catalog
 
 yaml.Unmarshal([]byte(typo), &c)
 // nil, and c.Sources is empty - the catalog silently has no sources
 ```
+
+The same tags that give a `.env` struct its defaults work here, so a catalog
+does not have to spell out what it agrees with:
+
+```go
+type Source struct {
+	Slug    string        `yaml:"slug,required"`
+	URL     string        `yaml:"url,required"`
+	Timeout time.Duration `yaml:"timeout" def:"30s"`
+	Quality int           `yaml:"quality" def:"80"`
+}
+```
+
+`,required` refuses a source that names nothing; `def` fills a timeout the file
+left out. Presence is decided after `<<` merge keys are expanded, so a value a
+merge supplied counts as set. An explicit `null` is not absence: writing it is a
+decision, and a default that overruled it would be overruling the person who
+wrote the file.
 
 The lenient call is the dangerous one: it returns no error and an empty
 catalog, so the service starts and serves nothing. The error carries the line
@@ -267,8 +285,10 @@ succeeds once provided.
   nested struct would add; a `Validate` method called at boot covers the
   cross-field rules a tag cannot.
 - Settings with structure belong in a YAML file, not in a variable: read it with
-  `yaml.UnmarshalStrict`, so a typo in a key is an error with a line number
-  rather than a config that silently lost half of itself.
+  `yaml.Unmarshal(data, &c, yaml.WithStrict())`, so a typo in a key is an error
+  with a line number rather than a config that silently lost half of itself.
+  `def` and `,required` on the struct cover what the file may leave out and what
+  it must not.
 
 Next: serve something over HTTP.
 
