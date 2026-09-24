@@ -117,13 +117,39 @@ _, _, err := c.ReadMessage()
 websocket.IsCloseError(err, websocket.CloseNormalClosure) // true
 ```
 
+## Приклад F - раптовий обрив
+
+Друга половина «нормальне закриття чи крах» - це власне крах. Пір, який просто
+зник (обірвана мережа, вбитий процес), close-кадру не надсилає взагалі, і це
+завершення повідомляється так само: `*CloseError` із кодом `1006`, а початкова
+помилка лишається його причиною. Тож одна перевірка покриває обидва випадки, і
+помилка, яку ви ловили б руками, нікуди не поділася:
+
+```go
+_, _, err := c.ReadMessage()
+if websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure,
+    websocket.CloseGoingAway) {
+    // пір упав або з'єднання обірвалося
+    log.Printf("втрачено клієнта: %v", err) // "websocket: close 1006"
+}
+errors.Is(err, io.EOF) // true, коли потік просто скінчився
+```
+
+Те, що насправді сталося, лишається причиною, тож його й далі можна перевірити:
+`io.EOF`, коли потік скінчився, або мережева помилка на кшталт
+`syscall.ECONNRESET`, коли з'єднання скинули. Дедлайн читання - інша річ, він
+лишається timeout: з'єднання відкрите, а дедлайн ставили ви.
+
+Код `1006` описує те, що сталося локально, і на дріт не йде ніколи - тож ви
+побачите його з читання, але ніколи від піра.
+
 ## Звіт виконання
 
 Програма хостить ендпоінти й під'єднується до них як клієнт:
 
 ```text
 $ go test ./...
-ok  	goloop.one/handbook/009-websocket	0.005s
+ok  	goloop.one/handbook/009-websocket	0.006s
 
 $ go run .
 A. echo (WriteMessage / ReadMessage):
@@ -138,6 +164,8 @@ D. broadcast to a hub (fan-out to every client):
    client A sent "hello all"; A got "hello all", B got "hello all"
 E. graceful close with a status code:
    message "closing now", then normal-closure=true
+F. an abrupt drop, with no close frame:
+   unexpected-close=true code=1006 cause=true
 ```
 
 Відлуння повернуло точні байти; JSON-RPC порахував суму на сервері й прочитав її
@@ -156,7 +184,11 @@ E. graceful close with a status code:
   polling. Hub (захищений набір з'єднань плюс broadcast) розсилає одне
   повідомлення кожному клієнту; додайте кімнати для чату чи живої стрічки.
 - `CloseWithStatus` закриває з кодом і причиною; `IsCloseError` дає іншому кінцю
-  відрізнити нормальне закриття від краху.
+  відрізнити нормальне закриття від краху, а `IsUnexpectedCloseError` ловить сам
+  крах - обірване з'єднання приходить як close `1006`.
+- `SetReadLimit` обмежує отримане повідомлення, `SetWriteLimit` - надіслане; а
+  повідомлення, записане через `NextWriter`, виходить фрагментами в міру запису,
+  тож надіслати велике не означає тримати його в пам'яті.
 - Body-cap чи буферизувальний timeout-middleware треба пропускати для апгрейду;
   глава про весь стек показує патерн.
 

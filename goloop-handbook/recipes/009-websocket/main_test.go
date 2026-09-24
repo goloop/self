@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"io"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -112,5 +114,34 @@ func TestGracefulClose(t *testing.T) {
 	}
 	if _, _, err := c.ReadMessage(); !websocket.IsCloseError(err, websocket.CloseNormalClosure) {
 		t.Errorf("close error = %v, want normal closure", err)
+	}
+}
+
+// TestAbruptDrop covers example F: a peer that vanishes without a close frame
+// is still reported as the connection ending, with the abnormal-closure code
+// and the underlying error kept underneath it.
+func TestAbruptDrop(t *testing.T) {
+	srv := httptest.NewServer(handler())
+	defer srv.Close()
+	base := "ws" + strings.TrimPrefix(srv.URL, "http")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	c, _, err := websocket.Dial(ctx, base+"/drop")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+
+	_, _, err = c.ReadMessage()
+	if !websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure) {
+		t.Errorf("err = %v, want an unexpected close", err)
+	}
+	var ce *websocket.CloseError
+	if !errors.As(err, &ce) || ce.Code != websocket.CloseAbnormalClosure {
+		t.Errorf("err = %#v, want close 1006", err)
+	}
+	if !errors.Is(err, io.EOF) {
+		t.Errorf("the cause is no longer reachable: %v", err)
 	}
 }

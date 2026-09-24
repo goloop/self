@@ -4,6 +4,8 @@ github.com/goloop/auth v0.7.1 h1:irOBNpqulWA9uMwjDz3PF5DSJ1C8yQX3cXJE/pJav0E=
 github.com/goloop/auth v0.7.1/go.mod h1:IYXSklKkRrImI9uN5ttkEwdiiEakow91N7uwcn8cEMM=
 github.com/goloop/env/v2 v2.7.1 h1:x+rM/akz/78rLWGk+9Ih8I3SrUdugF72H1gWcaQIn54=
 github.com/goloop/env/v2 v2.7.1/go.mod h1:9c1ljP78TTxYTUnBp8jpTYclKGONcmUN4hRnNnxFZt4=
+github.com/goloop/env/v2 v2.8.2 h1:CEnhWFtoeTylgDdl//sK8O5WuWvFrbvGlPUIAyzEU9w=
+github.com/goloop/env/v2 v2.8.2/go.mod h1:9c1ljP78TTxYTUnBp8jpTYclKGONcmUN4hRnNnxFZt4=
 github.com/goloop/g/v2 v2.3.0 h1:vF9gdehSx/Mw4TlJyT0FaRmIAp0n9nA+e+HlXH8APB4=
 github.com/goloop/g/v2 v2.3.0/go.mod h1:+Ge3HAtawvwcMzYPndp7T7+VX/+XU+Q0vf1oKM7ofo8=
 github.com/goloop/is/v2 v2.3.2 h1:977oNL3OJJkPOwSHLVijphfnjvGb4OcUdn20qTaUDQ4=
@@ -16,6 +18,8 @@ github.com/goloop/middlewares v0.3.2 h1:a2CNEF/0eU3rsJ/sqMXdOyEGv4RX4fVFnwD2MWUb
 github.com/goloop/middlewares v0.3.2/go.mod h1:kCPaHYQaALTs9ZFIBLoUG1/V5QayK+3XLqaDLaL19yo=
 github.com/goloop/mux v1.1.2 h1:ZMpaBvoftjqDNwpnYzfTMpInXNjzhArb8TtUVuVvR6M=
 github.com/goloop/mux v1.1.2/go.mod h1:Ocxn2ixn9SewEWM1d69v31qR8vsMi21vLLFo6cmfarE=
+github.com/goloop/mux v1.4.1 h1:35qpa6LrUomEu1gZ1PSuAHZNHDD0P5Sp3O5CRxcGxuw=
+github.com/goloop/mux v1.4.1/go.mod h1:Ocxn2ixn9SewEWM1d69v31qR8vsMi21vLLFo6cmfarE=
 github.com/goloop/norm v1.0.1 h1:RIkwXR/dwYP6W8nEQs98pC5rLWxVfbmh4+HqOfZ/3XQ=
 github.com/goloop/norm v1.0.1/go.mod h1:eaMH2/Nlm23jpmSnurqXYflhZDA5W2S65a0ZDIGqs6o=
 github.com/goloop/observe v0.1.0 h1:s5qCW4IqAM/WNXd5khH3q8sp+lA22xrmD72a4ad2rrc=

@@ -1,5 +1,7 @@
 github.com/goloop/env/v2 v2.7.1 h1:x+rM/akz/78rLWGk+9Ih8I3SrUdugF72H1gWcaQIn54=
 github.com/goloop/env/v2 v2.7.1/go.mod h1:9c1ljP78TTxYTUnBp8jpTYclKGONcmUN4hRnNnxFZt4=
+github.com/goloop/env/v2 v2.8.2 h1:CEnhWFtoeTylgDdl//sK8O5WuWvFrbvGlPUIAyzEU9w=
+github.com/goloop/env/v2 v2.8.2/go.mod h1:9c1ljP78TTxYTUnBp8jpTYclKGONcmUN4hRnNnxFZt4=
 github.com/goloop/opt/v2 v2.4.0 h1:xs5Pj7vE2MXuaVRBpdkepXiCqxiwV8WP5ngjFpx4k34=
 github.com/goloop/opt/v2 v2.4.0/go.mod h1:ns6m40v1NUBTrbRTB1e8fqCwzIrcTadZItajENdzWiY=
 github.com/goloop/scs/v2 v2.1.0 h1:CcBqLmBkUp6qiB88CqOxapgmYytEy3xKBNpVc1QTaYA=

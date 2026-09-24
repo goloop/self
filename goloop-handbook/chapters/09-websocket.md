@@ -117,13 +117,40 @@ _, _, err := c.ReadMessage()
 websocket.IsCloseError(err, websocket.CloseNormalClosure) // true
 ```
 
+## Example F - an abrupt drop
+
+The other half of "a normal close or a crash" is the crash. A peer that simply
+vanishes - a dropped network, a killed process - never sends a close frame at
+all, and that ending is reported the same way: a `*CloseError` with code
+`1006`, carrying the underlying error as its cause. So one check covers both,
+and the error you would have matched by hand is still there:
+
+```go
+_, _, err := c.ReadMessage()
+if websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure,
+    websocket.CloseGoingAway) {
+    // the peer crashed or the connection dropped
+    log.Printf("lost the client: %v", err) // "websocket: close 1006"
+}
+errors.Is(err, io.EOF) // true when the stream simply ended
+```
+
+Whatever actually went wrong is kept as the cause, so it is still there to
+match: `io.EOF` when the stream ended, a network error such as
+`syscall.ECONNRESET` when the connection was reset. A read deadline is a
+different thing and stays a timeout: the connection is still open, and the
+deadline was yours.
+
+Code `1006` describes what happened locally and is never sent on the wire, so
+you will see it from a read and never from a peer.
+
 ## Execution report
 
 The program hosts the endpoints and dials them as a client:
 
 ```text
 $ go test ./...
-ok  	goloop.one/handbook/009-websocket	0.005s
+ok  	goloop.one/handbook/009-websocket	0.006s
 
 $ go run .
 A. echo (WriteMessage / ReadMessage):
@@ -138,6 +165,8 @@ D. broadcast to a hub (fan-out to every client):
    client A sent "hello all"; A got "hello all", B got "hello all"
 E. graceful close with a status code:
    message "closing now", then normal-closure=true
+F. an abrupt drop, with no close frame:
+   unexpected-close=true code=1006 cause=true
 ```
 
 The echo returned the exact bytes; the JSON RPC computed the sum on the server
@@ -156,7 +185,11 @@ instead of a bare error. The recipe passes under the race detector.
   one over polling. A hub (a guarded set of connections plus a broadcast) fans
   one message out to every client; add rooms for a chat or a live feed.
 - `CloseWithStatus` closes with a code and reason; `IsCloseError` lets the other
-  end tell a normal close from a crash.
+  end tell a normal close from a crash, and `IsUnexpectedCloseError` catches the
+  crash itself - a dropped connection arrives as close `1006`.
+- `SetReadLimit` caps a received message and `SetWriteLimit` a sent one; a
+  message written through `NextWriter` goes out in fragments as it is written,
+  so sending something large does not mean holding it.
 - A body cap or a buffering timeout middleware must be skipped for an upgrade;
   the whole-stack chapter shows the pattern.
 

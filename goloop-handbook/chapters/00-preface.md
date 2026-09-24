@@ -29,7 +29,7 @@ not just its simplest call.
 Read Part I in order; it takes one module at a time and builds up. The later
 parts combine those pieces into a working service. When you want the full
 surface of a package, the reference is a link away: the
-[project README](../README.md) and each module's `DOC.md`.
+[project README](../../README.md) and each module's `DOC.md`.
 
 ## The one habit
 

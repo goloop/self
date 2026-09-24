@@ -8,12 +8,16 @@
 //	B. rpc     - a JSON request in, a JSON reply out (WriteJSON/ReadJSON);
 //	C. stream  - the server pushes a sequence of messages the client reads;
 //	D. hub     - one message fanned out to every connected client (broadcast);
-//	E. close   - the server closes with a status code the client can read.
+//	E. close   - the server closes with a status code the client can read;
+//	F. drop    - the server vanishes without a close frame, and the client
+//	             still learns that the connection ended, not that it is idle.
 package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -144,6 +148,24 @@ func run() error {
 	fmt.Printf("   message %q, then normal-closure=%v\n",
 		first, websocket.IsCloseError(closeErr, websocket.CloseNormalClosure))
 	c.Close()
+
+	// Example F: the other half of "a clean close or a crash". This server
+	// drops the socket with no close frame at all, the way a killed process
+	// or a lost network does. There is no code from the peer to read, so the
+	// connection reports its own: 1006, an abnormal closure, with the
+	// underlying error still reachable underneath it.
+	fmt.Println("F. an abrupt drop, with no close frame:")
+	c, _, err = websocket.Dial(ctx, base+"/drop")
+	if err != nil {
+		return err
+	}
+	_, _, dropErr := c.ReadMessage()
+	var ce *websocket.CloseError
+	_ = errors.As(dropErr, &ce)
+	fmt.Printf("   unexpected-close=%v code=%d cause=%v\n",
+		websocket.IsUnexpectedCloseError(dropErr, websocket.CloseNormalClosure),
+		ce.Code, errors.Is(dropErr, io.EOF))
+	c.Close()
 	return nil
 }
 
@@ -215,6 +237,16 @@ func handler() http.Handler {
 
 	// /bye: send one message, then close cleanly with a status code the client
 	// can distinguish from an abrupt disconnect.
+	// /drop takes the connection and lets it go without a closing handshake,
+	// which is what a crash looks like from the other end.
+	mux.HandleFunc("/drop", func(w http.ResponseWriter, r *http.Request) {
+		conn, err := websocket.Upgrade(w, r)
+		if err != nil {
+			return
+		}
+		conn.Close()
+	})
+
 	mux.HandleFunc("/bye", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := websocket.Upgrade(w, r)
 		if err != nil {
