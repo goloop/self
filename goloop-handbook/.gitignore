@@ -17,5 +17,6 @@ recipes/012-refresh-lifecycle/012-refresh-lifecycle
 recipes/013-reverse-proxy/013-reverse-proxy
 recipes/014-ai-production/014-ai-production
 recipes/015-error-slugs/015-error-slugs
+recipes/016-yaml-catalog/016-yaml-catalog
 recipes/**/*.log
 recipes/**/.env
