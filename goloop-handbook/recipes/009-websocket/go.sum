@@ -2,3 +2,5 @@ github.com/goloop/websocket v0.1.2 h1:SVDa5uluoNj3j3hgte++S79n9TSaHitEeSsNEUgf+8
 github.com/goloop/websocket v0.1.2/go.mod h1:wMOTrxnUk93YG9bZeuP3xUNNpPT1ONDoKqddfU6E7Oo=
 github.com/goloop/websocket v0.9.0 h1:aWtslAbIy9pxbv5S8HOknmCuzjEjeUNJHlex0rcW9Os=
 github.com/goloop/websocket v0.9.0/go.mod h1:wMOTrxnUk93YG9bZeuP3xUNNpPT1ONDoKqddfU6E7Oo=
+github.com/goloop/websocket v1.0.0 h1:s6bTOaeNd0w+s1N1acsHjvPmd83xC8rHN85bNUvZS78=
+github.com/goloop/websocket v1.0.0/go.mod h1:wMOTrxnUk93YG9bZeuP3xUNNpPT1ONDoKqddfU6E7Oo=
