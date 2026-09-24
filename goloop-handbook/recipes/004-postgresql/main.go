@@ -76,8 +76,8 @@ func run() error {
 	for _, n := range list {
 		fmt.Printf("   - #%d %q %v\n", n.ID, n.Title, n.Tags)
 	}
-	if total, err := q.CountNotes(ctx); err == nil && total != nil {
-		fmt.Printf("   total = %d\n", *total)
+	if total, err := q.CountNotes(ctx); err == nil {
+		fmt.Printf("   total = %d\n", total)
 	}
 
 	// Example C: search with a parameter; tags come back as a Go []string.
@@ -133,8 +133,8 @@ func run() error {
 // count returns the number of notes, or -1 on error, for the report.
 func count(ctx context.Context, q *store.Queries) int64 {
 	total, err := q.CountNotes(ctx)
-	if err != nil || total == nil {
+	if err != nil {
 		return -1
 	}
-	return *total
+	return total
 }

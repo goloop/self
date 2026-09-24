@@ -16,4 +16,4 @@ SELECT count(*) FROM notes;
 
 -- name: SearchNotes :many
 -- Case-insensitive title search.
-SELECT * FROM notes WHERE title ILIKE '%' || $1 || '%' ORDER BY id DESC;
+SELECT * FROM notes WHERE title ILIKE '%' || @query || '%' ORDER BY id DESC;

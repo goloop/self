@@ -1,0 +1,270 @@
+{
+  "version": 1,
+  "pgc": "1.0.1",
+  "migrations": "sha256:6bd2329d1c518fe462212e2aac7fcb2023238da962dabd96a7ff8882d701f27e",
+  "queries": [
+    {
+      "file": "queries/notes.sql",
+      "name": "CountNotes",
+      "sql": "sha256:41540a347080c34ed575f652136a04c429b7955e7ec8f238076ad1ac8f8a2592",
+      "columns": [
+        {
+          "name": "count",
+          "type": 20,
+          "typemod": -1
+        }
+      ]
+    },
+    {
+      "file": "queries/notes.sql",
+      "name": "CreateNote",
+      "sql": "sha256:02a68c735a219fba6bcc5c0ea666c66d19866d5fc8d886a411afa3bcaeda37bb",
+      "params": [
+        25,
+        25,
+        1009
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": 20,
+          "table": 16829,
+          "attnum": 1,
+          "typemod": -1
+        },
+        {
+          "name": "title",
+          "type": 25,
+          "table": 16829,
+          "attnum": 2,
+          "typemod": -1
+        },
+        {
+          "name": "body",
+          "type": 25,
+          "table": 16829,
+          "attnum": 3,
+          "typemod": -1
+        },
+        {
+          "name": "tags",
+          "type": 1009,
+          "table": 16829,
+          "attnum": 4,
+          "typemod": -1
+        },
+        {
+          "name": "created_at",
+          "type": 1184,
+          "table": 16829,
+          "attnum": 5,
+          "typemod": -1
+        }
+      ]
+    },
+    {
+      "file": "queries/notes.sql",
+      "name": "ListNotes",
+      "sql": "sha256:df3fe378bfc40a84912981c7829acda27274230958dfe00ef875c147ce2a63c8",
+      "params": [
+        20
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": 20,
+          "table": 16829,
+          "attnum": 1,
+          "typemod": -1
+        },
+        {
+          "name": "title",
+          "type": 25,
+          "table": 16829,
+          "attnum": 2,
+          "typemod": -1
+        },
+        {
+          "name": "body",
+          "type": 25,
+          "table": 16829,
+          "attnum": 3,
+          "typemod": -1
+        },
+        {
+          "name": "tags",
+          "type": 1009,
+          "table": 16829,
+          "attnum": 4,
+          "typemod": -1
+        },
+        {
+          "name": "created_at",
+          "type": 1184,
+          "table": 16829,
+          "attnum": 5,
+          "typemod": -1
+        }
+      ]
+    },
+    {
+      "file": "queries/notes.sql",
+      "name": "NoteByID",
+      "sql": "sha256:fcb57b637918b406a64978eca79b20953e5cf446ad7f241aa4f3f8b662fda0a3",
+      "params": [
+        20
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": 20,
+          "table": 16829,
+          "attnum": 1,
+          "typemod": -1
+        },
+        {
+          "name": "title",
+          "type": 25,
+          "table": 16829,
+          "attnum": 2,
+          "typemod": -1
+        },
+        {
+          "name": "body",
+          "type": 25,
+          "table": 16829,
+          "attnum": 3,
+          "typemod": -1
+        },
+        {
+          "name": "tags",
+          "type": 1009,
+          "table": 16829,
+          "attnum": 4,
+          "typemod": -1
+        },
+        {
+          "name": "created_at",
+          "type": 1184,
+          "table": 16829,
+          "attnum": 5,
+          "typemod": -1
+        }
+      ]
+    },
+    {
+      "file": "queries/notes.sql",
+      "name": "SearchNotes",
+      "sql": "sha256:02ab315e82841abdd8090a8a6bc3c3fdd0381f7df5142037c383a87c00833ba0",
+      "params": [
+        25
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": 20,
+          "table": 16829,
+          "attnum": 1,
+          "typemod": -1
+        },
+        {
+          "name": "title",
+          "type": 25,
+          "table": 16829,
+          "attnum": 2,
+          "typemod": -1
+        },
+        {
+          "name": "body",
+          "type": 25,
+          "table": 16829,
+          "attnum": 3,
+          "typemod": -1
+        },
+        {
+          "name": "tags",
+          "type": 1009,
+          "table": 16829,
+          "attnum": 4,
+          "typemod": -1
+        },
+        {
+          "name": "created_at",
+          "type": 1184,
+          "table": 16829,
+          "attnum": 5,
+          "typemod": -1
+        }
+      ]
+    }
+  ],
+  "catalog": {
+    "types": [
+      {
+        "oid": 20,
+        "name": "int8",
+        "kind": 98,
+        "category": 78
+      },
+      {
+        "oid": 25,
+        "name": "text",
+        "kind": 98,
+        "category": 83
+      },
+      {
+        "oid": 1009,
+        "name": "_text",
+        "kind": 98,
+        "category": 65,
+        "elem": 25
+      },
+      {
+        "oid": 1184,
+        "name": "timestamptz",
+        "kind": 98,
+        "category": 68
+      }
+    ],
+    "tables": [
+      {
+        "oid": 16829,
+        "schema": "public",
+        "name": "notes",
+        "columns": [
+          {
+            "name": "id",
+            "attnum": 1,
+            "type": 20,
+            "notnull": true
+          },
+          {
+            "name": "title",
+            "attnum": 2,
+            "type": 25,
+            "notnull": true
+          },
+          {
+            "name": "body",
+            "attnum": 3,
+            "type": 25,
+            "notnull": true
+          },
+          {
+            "name": "tags",
+            "attnum": 4,
+            "type": 1009,
+            "notnull": true
+          },
+          {
+            "name": "created_at",
+            "attnum": 5,
+            "type": 1184,
+            "notnull": true
+          }
+        ]
+      }
+    ],
+    "enums": {}
+  }
+}

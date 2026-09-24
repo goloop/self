@@ -59,7 +59,7 @@ func TestRollback(t *testing.T) {
 
 	q := store.New(db)
 	before, err := q.CountNotes(ctx)
-	if err != nil || before == nil {
+	if err != nil {
 		t.Fatalf("count before: %v", err)
 	}
 
@@ -76,10 +76,10 @@ func TestRollback(t *testing.T) {
 	}
 
 	after, err := q.CountNotes(ctx)
-	if err != nil || after == nil {
+	if err != nil {
 		t.Fatalf("count after: %v", err)
 	}
-	if *before != *after {
-		t.Fatalf("rollback leaked a row: before=%d after=%d", *before, *after)
+	if before != after {
+		t.Fatalf("rollback leaked a row: before=%d after=%d", before, after)
 	}
 }

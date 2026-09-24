@@ -643,6 +643,14 @@ users, err := q.ListUsers(ctx, 10, 0)
 err = q.WithTx(tx).DeleteUser(ctx, u.ID)
 ```
 
+The same tool applies the migrations, and it checks before it runs: a file that
+commits on its own is refused, an applied file that was edited or deleted stops
+the run, a no-transaction file that failed half way is never silently repeated,
+and concurrent runs queue on a lock. `pgc migrate status` and `pgc check` fail
+in CI when the migration history or the generated code drifted. pgc is stable
+from v1: its commands, configuration, lock file, history table and generated
+code do not change incompatibly within v1.
+
 **Learn more:** [github.com/goloop/pgc](https://github.com/goloop/pgc) · [reference](https://pkg.go.dev/github.com/goloop/pgc)
 
 ## qp

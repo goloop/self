@@ -46,7 +46,7 @@ CREATE TABLE notes (
 INSERT INTO notes (title, body, tags) VALUES ($1, $2, $3) RETURNING *;
 
 -- name: SearchNotes :many
-SELECT * FROM notes WHERE title ILIKE '%' || $1 || '%' ORDER BY id DESC;
+SELECT * FROM notes WHERE title ILIKE '%' || @query || '%' ORDER BY id DESC;
 ```
 
 `pgc generate` перетворює це на типізовану структуру `Note` й типізовані методи:
@@ -61,7 +61,7 @@ type Note struct {
 }
 
 func (q *Queries) CreateNote(ctx context.Context, title, body string, tags []string) (Note, error)
-func (q *Queries) SearchNotes(ctx context.Context, arg1 string) ([]Note, error)
+func (q *Queries) SearchNotes(ctx context.Context, query string) ([]Note, error)
 ```
 
 ## Приклад A - запис
@@ -83,7 +83,7 @@ n, err := q.CreateNote(ctx, "Reading list", "Books to read this month.",
 ```go
 got, _ := q.NoteByID(ctx, n.ID)   // Note
 list, _ := q.ListNotes(ctx, 10)   // []Note
-total, _ := q.CountNotes(ctx)     // *int64
+total, _ := q.CountNotes(ctx)     // int64
 ```
 
 ## Приклад C - пошук, з масивом
@@ -121,12 +121,61 @@ _ = tx.Commit() // обидві нотатки лягають разом
 Відкотіть замість коміту - і записи зникають: `CreateNote` усередині відкоченої
 `tx` ніколи не стає видимим, тож `CountNotes` після цього незмінний.
 
+## Приклад E - міграції, що стережуть себе самі
+
+Міграція виконується проти найважливішої бази, тож `pgc migrate` перевіряє всю
+теку й звіряє її з тим, що застосував раніше, ще до того, як щось запустити.
+Три помилки, які він зупиняє, - з реальної сесії з цим рецептом. Друга
+міграція, що комітить сама, відхиляється ще до старту, бо `pgc` і так виконує
+кожен файл у транзакції разом із записом про те, що його виконано:
+
+```text
+$ pgc migrate
+pgc: database book@127.0.0.1:5440/book (from PGC_DATABASE_URL)
+pgc: migrate: 002_pinned.sql, statement 2: COMMIT - each file already runs in a transaction of its own; remove it, or mark the file "-- pgc: no-transaction" to run it statement by statement
+```
+
+Редагування вже застосованого файлу не змінює історію мовчки.
+`pgc migrate status` називає файл і завершується з ненульовим кодом, тож крок CI
+може на цьому зупинитись, а `pgc migrate` нічого не застосовує, доки файл не
+повернуто:
+
+```text
+$ pgc migrate status
+pgc: database book@127.0.0.1:5440/book (from PGC_DATABASE_URL)
+changed  001_notes.sql                            2026-09-24 09:36
+pending  002_pinned.sql
+pgc: 1 migration(s) need attention: changed or missing files, or no-transaction files left unfinished
+```
+
+Поверніть `001_notes.sql` як був - і `002_pinned.sql` застосовується. Нова
+колонка змінює те, що повертає `SELECT *`, і `pgc check` - який нічого не
+пише - каже, що закомічений Go більше не відповідає:
+
+```text
+$ pgc migrate
+pgc: database book@127.0.0.1:5440/book (from PGC_DATABASE_URL)
+applied 002_pinned.sql
+
+$ pgc check
+pgc: the generated package differs from what the queries produce; run pgc generate:
+  out of date: internal/store/models.go
+  out of date: internal/store/notes.sql.go
+```
+
+Це і є весь цикл у CI: `pgc migrate status` стереже історію, `pgc check` -
+згенерований код, і обидва голосно падають, замість того щоб пустити в прод
+схему, що розійшлась. (Кожна команда, що торкається бази, спершу друкує, якої
+саме, без пароля, - `DATABASE_URL`, призначений для іншого, помітно ще до того,
+як щось станеться.)
+
 ## Звіт виконання
 
 Міграції застосовано, протестовано проти справжнього PostgreSQL, потім запущено:
 
 ```text
 $ pgc migrate
+pgc: database book@127.0.0.1:5440/book (from PGC_DATABASE_URL)
 applied 001_notes.sql
 
 $ go test ./...            # проти БД; коли її немає - охайно пропускає
@@ -177,6 +226,9 @@ D. transaction (WithTx, commit then rollback):
   збірку, а не прод.
 - Nullable-колонка `json`/`jsonb` - це `*json.RawMessage`, тож SQL `NULL` і JSON
   `null` лишаються різними.
+- `pgc migrate` відхиляє файл, що комітить сам, і застосований файл, який
+  редагували; `pgc migrate status` і `pgc check` падають у CI, коли історія чи
+  згенерований код розійшлися.
 
 Частина II продовжується запитом до мовної моделі про ці дані.
 

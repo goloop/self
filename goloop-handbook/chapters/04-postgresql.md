@@ -44,7 +44,7 @@ tells `pgc` whether the method returns a single row or a slice:
 INSERT INTO notes (title, body, tags) VALUES ($1, $2, $3) RETURNING *;
 
 -- name: SearchNotes :many
-SELECT * FROM notes WHERE title ILIKE '%' || $1 || '%' ORDER BY id DESC;
+SELECT * FROM notes WHERE title ILIKE '%' || @query || '%' ORDER BY id DESC;
 ```
 
 `pgc generate` turns that into a typed `Note` struct and typed methods:
@@ -59,7 +59,7 @@ type Note struct {
 }
 
 func (q *Queries) CreateNote(ctx context.Context, title, body string, tags []string) (Note, error)
-func (q *Queries) SearchNotes(ctx context.Context, arg1 string) ([]Note, error)
+func (q *Queries) SearchNotes(ctx context.Context, query string) ([]Note, error)
 ```
 
 ## Example A - write
@@ -80,7 +80,7 @@ Single-row and multi-row reads are ordinary method calls that return typed rows:
 ```go
 got, _ := q.NoteByID(ctx, n.ID)   // Note
 list, _ := q.ListNotes(ctx, 10)   // []Note
-total, _ := q.CountNotes(ctx)     // *int64
+total, _ := q.CountNotes(ctx)     // int64
 ```
 
 ## Example C - search, with an array
@@ -118,12 +118,61 @@ _ = tx.Commit() // both notes land together
 Roll back instead of committing and the writes vanish: a `CreateNote` inside a
 rolled-back `tx` is never visible, so `CountNotes` is unchanged afterwards.
 
+## Example E - migrations that guard themselves
+
+A migration runs against the database that matters most, so `pgc migrate`
+checks the whole directory, and compares it with what it applied before, before
+it runs anything. Three mistakes it stops, from a real session with this
+recipe. A second migration that commits on its own is refused before it starts,
+because `pgc` already runs each file in a transaction together with the record
+that it ran:
+
+```text
+$ pgc migrate
+pgc: database book@127.0.0.1:5440/book (from PGC_DATABASE_URL)
+pgc: migrate: 002_pinned.sql, statement 2: COMMIT - each file already runs in a transaction of its own; remove it, or mark the file "-- pgc: no-transaction" to run it statement by statement
+```
+
+Editing a file that is already applied does not quietly change history.
+`pgc migrate status` names the file and exits non-zero, so a CI step can stop on
+it, and `pgc migrate` refuses to apply anything until the file is put back:
+
+```text
+$ pgc migrate status
+pgc: database book@127.0.0.1:5440/book (from PGC_DATABASE_URL)
+changed  001_notes.sql                            2026-09-24 09:36
+pending  002_pinned.sql
+pgc: 1 migration(s) need attention: changed or missing files, or no-transaction files left unfinished
+```
+
+Put `001_notes.sql` back as it was and `002_pinned.sql` applies. The new column
+changes what `SELECT *` returns, and `pgc check` - which writes nothing - says
+the committed Go no longer matches:
+
+```text
+$ pgc migrate
+pgc: database book@127.0.0.1:5440/book (from PGC_DATABASE_URL)
+applied 002_pinned.sql
+
+$ pgc check
+pgc: the generated package differs from what the queries produce; run pgc generate:
+  out of date: internal/store/models.go
+  out of date: internal/store/notes.sql.go
+```
+
+That is the whole loop in CI: `pgc migrate status` guards the history,
+`pgc check` guards the generated code, and both fail loudly instead of letting
+a drifted schema reach production. (Every command that touches the database
+first prints which one, without the password - a `DATABASE_URL` meant for
+something else is noticed before anything happens.)
+
 ## Execution report
 
 Migrations applied, tested against a real PostgreSQL, then run:
 
 ```text
 $ pgc migrate
+pgc: database book@127.0.0.1:5440/book (from PGC_DATABASE_URL)
 applied 001_notes.sql
 
 $ go test ./...            # against the DB; skips gracefully when it is unset
@@ -175,6 +224,9 @@ column stays a plain `json.RawMessage`.
   build, not production.
 - A nullable `json`/`jsonb` column is a `*json.RawMessage`, so SQL `NULL` and
   JSON `null` stay distinct.
+- `pgc migrate` refuses a file that commits on its own and an applied file that
+  was edited; `pgc migrate status` and `pgc check` fail in CI when the history or
+  the generated code drifted.
 
 Part II continues with asking a language model about this data.
 

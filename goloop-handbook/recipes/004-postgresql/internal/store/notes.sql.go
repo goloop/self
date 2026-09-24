@@ -58,9 +58,9 @@ SELECT count(*) FROM notes
 `
 
 // CountNotes total number of notes.
-func (q *Queries) CountNotes(ctx context.Context) (*int64, error) {
+func (q *Queries) CountNotes(ctx context.Context) (int64, error) {
 	row := q.db.QueryRowContext(ctx, countNotes)
-	var v *int64
+	var v int64
 	err := row.Scan(&v)
 	return v, err
 }
@@ -70,8 +70,8 @@ SELECT * FROM notes WHERE title ILIKE '%' || $1 || '%' ORDER BY id DESC
 `
 
 // SearchNotes case-insensitive title search.
-func (q *Queries) SearchNotes(ctx context.Context, arg1 string) ([]Note, error) {
-	rows, err := q.db.QueryContext(ctx, searchNotes, arg1)
+func (q *Queries) SearchNotes(ctx context.Context, query string) ([]Note, error) {
+	rows, err := q.db.QueryContext(ctx, searchNotes, query)
 	if err != nil {
 		return nil, err
 	}

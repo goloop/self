@@ -1,0 +1,286 @@
+{
+  "version": 1,
+  "pgc": "1.0.1",
+  "migrations": "sha256:f6c0756c51f76719914c544cb8f4778bf6051f24fb6526ab860084d6cea50a94",
+  "queries": [
+    {
+      "file": "queries/q.sql",
+      "name": "CreateNote",
+      "sql": "sha256:851b0e43928a8bee821e52d5aba8c37240799773700682f828f6d9e7dd3aa9e5",
+      "params": [
+        20,
+        25
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": 20,
+          "table": 16592,
+          "attnum": 1,
+          "typemod": -1
+        },
+        {
+          "name": "user_id",
+          "type": 20,
+          "table": 16592,
+          "attnum": 2,
+          "typemod": -1
+        },
+        {
+          "name": "title",
+          "type": 25,
+          "table": 16592,
+          "attnum": 3,
+          "typemod": -1
+        },
+        {
+          "name": "created_at",
+          "type": 1184,
+          "table": 16592,
+          "attnum": 4,
+          "typemod": -1
+        }
+      ]
+    },
+    {
+      "file": "queries/q.sql",
+      "name": "CreateUser",
+      "sql": "sha256:2adc9fa303079a3e9c28bbf0565c1ac60eea3a5c37e34fc6a0cb6e151c325382",
+      "params": [
+        25,
+        25
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": 20,
+          "table": 16581,
+          "attnum": 1,
+          "typemod": -1
+        },
+        {
+          "name": "email",
+          "type": 25,
+          "table": 16581,
+          "attnum": 2,
+          "typemod": -1
+        },
+        {
+          "name": "password_hash",
+          "type": 25,
+          "table": 16581,
+          "attnum": 3,
+          "typemod": -1
+        },
+        {
+          "name": "created_at",
+          "type": 1184,
+          "table": 16581,
+          "attnum": 4,
+          "typemod": -1
+        }
+      ]
+    },
+    {
+      "file": "queries/q.sql",
+      "name": "NotesByUser",
+      "sql": "sha256:15d1cf12ffc7ad4dbc41f1909a194a9f7d303e66e0bd77d46536db274b037083",
+      "params": [
+        20
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": 20,
+          "table": 16592,
+          "attnum": 1,
+          "typemod": -1
+        },
+        {
+          "name": "user_id",
+          "type": 20,
+          "table": 16592,
+          "attnum": 2,
+          "typemod": -1
+        },
+        {
+          "name": "title",
+          "type": 25,
+          "table": 16592,
+          "attnum": 3,
+          "typemod": -1
+        },
+        {
+          "name": "created_at",
+          "type": 1184,
+          "table": 16592,
+          "attnum": 4,
+          "typemod": -1
+        }
+      ]
+    },
+    {
+      "file": "queries/q.sql",
+      "name": "UserByEmail",
+      "sql": "sha256:f3f58600e971f1be6cbe206bba24f77769f54c6230e28f5b3dc719b869d9cb3f",
+      "params": [
+        25
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": 20,
+          "table": 16581,
+          "attnum": 1,
+          "typemod": -1
+        },
+        {
+          "name": "email",
+          "type": 25,
+          "table": 16581,
+          "attnum": 2,
+          "typemod": -1
+        },
+        {
+          "name": "password_hash",
+          "type": 25,
+          "table": 16581,
+          "attnum": 3,
+          "typemod": -1
+        },
+        {
+          "name": "created_at",
+          "type": 1184,
+          "table": 16581,
+          "attnum": 4,
+          "typemod": -1
+        }
+      ]
+    },
+    {
+      "file": "queries/q.sql",
+      "name": "UserByID",
+      "sql": "sha256:843923b9a0257cf80f1dff554e7dc8fdfc05f489328e8376513124dfb42996e3",
+      "params": [
+        20
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": 20,
+          "table": 16581,
+          "attnum": 1,
+          "typemod": -1
+        },
+        {
+          "name": "email",
+          "type": 25,
+          "table": 16581,
+          "attnum": 2,
+          "typemod": -1
+        },
+        {
+          "name": "password_hash",
+          "type": 25,
+          "table": 16581,
+          "attnum": 3,
+          "typemod": -1
+        },
+        {
+          "name": "created_at",
+          "type": 1184,
+          "table": 16581,
+          "attnum": 4,
+          "typemod": -1
+        }
+      ]
+    }
+  ],
+  "catalog": {
+    "types": [
+      {
+        "oid": 20,
+        "name": "int8",
+        "kind": 98,
+        "category": 78
+      },
+      {
+        "oid": 25,
+        "name": "text",
+        "kind": 98,
+        "category": 83
+      },
+      {
+        "oid": 1184,
+        "name": "timestamptz",
+        "kind": 98,
+        "category": 68
+      }
+    ],
+    "tables": [
+      {
+        "oid": 16581,
+        "schema": "public",
+        "name": "users",
+        "columns": [
+          {
+            "name": "id",
+            "attnum": 1,
+            "type": 20,
+            "notnull": true
+          },
+          {
+            "name": "email",
+            "attnum": 2,
+            "type": 25,
+            "notnull": true
+          },
+          {
+            "name": "password_hash",
+            "attnum": 3,
+            "type": 25,
+            "notnull": true
+          },
+          {
+            "name": "created_at",
+            "attnum": 4,
+            "type": 1184,
+            "notnull": true
+          }
+        ]
+      },
+      {
+        "oid": 16592,
+        "schema": "public",
+        "name": "notes",
+        "columns": [
+          {
+            "name": "id",
+            "attnum": 1,
+            "type": 20,
+            "notnull": true
+          },
+          {
+            "name": "user_id",
+            "attnum": 2,
+            "type": 20,
+            "notnull": true
+          },
+          {
+            "name": "title",
+            "attnum": 3,
+            "type": 25,
+            "notnull": true
+          },
+          {
+            "name": "created_at",
+            "attnum": 4,
+            "type": 1184,
+            "notnull": true
+          }
+        ]
+      }
+    ],
+    "enums": {}
+  }
+}
