@@ -23,9 +23,9 @@ zero-dependency утиліт, і невеликий **прикладний яр�
 
 - **Фундамент:** `ai` (з драйверами провайдерів `anthropic`, `openai`,
   `gemini`, `grok`, `deepseek`, `openrouter`, `ollama`, `mistral`, `cohere`),
-  `env`, `g`, `is`, `key`, `kind`, `log`, `middlewares`, `mux`, `opt`, `pgc`,
-  `qp`, `resp`, `scs`, `set`, `slug`, `t13n`, `trit`, `websocket`.
-- **Прикладний ярус:** `app`, `observe`, `jwt`, `auth`, `argon2id`, `session`, `mail`, `cli`.
+  `env`, `g`, `is`, `key`, `kind`, `log`, `middlewares`, `mux`, `norm`, `opt`, `pgc`,
+  `qp`, `resp`, `scs`, `set`, `slug`, `t13n`, `trit`, `websocket`, `yaml`.
+- **Прикладний ярус:** `app`, `observe`, `jwt`, `auth`, `argon2id`, `session`, `mail`, `cli`, `creem`, `paddle`, `ledger`.
 
 Разом вони закривають “нудні”, але важливі краї прикладного коду: читання
 конфігурації з `.env`, парсинг аргументів командного рядка, перевірку вхідних
@@ -214,6 +214,11 @@ func run() error {
 - [**session** - підписані cookie-сесії для браузерних застосунків](#session)
 - [**mail** - побудова й надсилання вихідної пошти через SMTP](#mail)
 - [**cli** - скафолдинг і перевірка goloop-first проєктів](#cli)
+
+- [**creem** - платежі, підписки та webhook](#creem)
+- [**paddle** - платіжні транзакції та підписки](#paddle)
+- [**ledger** - кредитні баланси, резервування та списання](#ledger)
+- [Версії модулів](#версії-модулів)
 
 ## ai
 
@@ -1277,3 +1282,79 @@ goloop-first проєкт, тож ти стартуєш із робочого с
 
 Кожен модуль навмисно невеликий. Не потрібно приймати всю групу одразу:
 встановлюйте тільки той module, який закриває конкретну задачу перед вами.
+
+## Версії модулів
+
+Локальний зріз релізів від 2026-10-18. Теги підготовлено локально; до їх публікації ці версії не можна завантажити з віддаленого репозиторію. Модулі v1 зберігають шлях без суфікса /v1; модулі v2 зберігають /v2. Репозиторій self переходить на v1.0.0 як двомовний довідник. site залишається концепцією без Go-реалізації.
+
+| Модуль | Версія | Зміни |
+|---|---|---|
+| [ai](https://github.com/goloop/ai) | v1.2.2 | Виправлено втрату порожніх SSE-даних і переповнення Retry-After. Response.Text виділяє точний розмір буфера та повертає одиничний текст без копіювання. |
+| [anthropic](https://github.com/goloop/anthropic) | v1.1.4 | Виправлено нескінченну пагінацію при повторенні курсора сервером. Перевірено перетворення повідомлень, потік, batch та обмеження відповіді. |
+| [app](https://github.com/goloop/app) | v1.0.0 | Перевірено запуск, згортання компонентів при помилках, таймаути завершення, HTTP і worker. Алгоритми залишено без змін; стабілізація API у v1. |
+| [argon2id](https://github.com/goloop/argon2id) | v1.1.2 | Додано ранню перевірку довжини хешу перед розбиттям рядка. Великий некоректний ввід більше не спричиняє пропорційне виділення масиву підрядків. Криптографічний алгоритм без змін. |
+| [auth](https://github.com/goloop/auth) | v1.0.0 | Стабільний API, Subject.IssuedAt і розбір refresh token без алокацій. |
+| [cli](https://github.com/goloop/cli) | v1.0.0 | Виправлено хибний успішний результат сканування відсутнього або недоступного каталогу. Шаблон сервісу посилається на app v1.0.0. |
+| [cohere](https://github.com/goloop/cohere) | v1.1.5 | Embeddings більше не змінює переданий запит. Nil-запити chat, stream і embeddings повертають помилку замість panic. ChatStream повідомляє про пошкоджений JSON замість тихого пропуску події. |
+| [creem](https://github.com/goloop/creem) | v1.0.0 | Перевірено повтори HTTP-запитів, обмеження тіла, підписи webhook, пагінацію і декодування часу. Підстав для зміни алгоритмів не виявлено; стабілізація поточного API. |
+| [deepseek](https://github.com/goloop/deepseek) | v1.1.5 | У native chat та stream nil-запити більше не спричиняють panic. Перевірено конвертацію, накопичення tool calls, помилки та завершення потоку. |
+| [env](https://github.com/goloop/env) | v2.8.3 | Виправлено panic для nil-інтерфейсу з WithParser та явне очищення часу і тривалості порожніми значеннями. TextUnmarshaler отримує явно порожнє значення. |
+| [g](https://github.com/goloop/g) | v2.3.1 | SafeSum виявляє overflow та NaN для іменованих float-типів. Ptr приймає nil-інтерфейс. Intersection обходиться однією таблицею замість двох. |
+| [gemini](https://github.com/goloop/gemini) | v1.2.2 | CountTokens повертає ai.ErrNoRequest замість panic при nil-запиті. Переглянуто повідомлення, інструменти, цитати, embeddings та генерацію зображень. |
+| [grok](https://github.com/goloop/grok) | v1.2.2 | Виправлено nil-запити native chat та stream. Перетворення і завершення потоку перевірено тестами. |
+| [is](https://github.com/goloop/is) | v2.3.3 | IBAN перевіряє, що контрольні символи є цифрами. IP розбирає адресу один раз. JWT обмежує кількість частин при розбитті некоректного вводу. |
+| [jwt](https://github.com/goloop/jwt) | v1.1.1 | Audience коректно декодує null у nil. Verify використовує вихідний підрядок для перевірки підпису та обмежене розбиття токена. |
+| [key](https://github.com/goloop/key) | v2.1.1 | Перевірено межі uint64, UTF-8, канонічність ключів, відбір випадкових значень та завершення ітераторів. Підтверджених багів чи необхідної оптимізації не виявлено. |
+| [kind](https://github.com/goloop/kind) | v1.0.0 | Depth, Leaf та Base більше не падають на nil receiver. Перевірено рекурсивні дескриптори, кеш і копії індексів полів. |
+| [ledger](https://github.com/goloop/ledger) | v1.0.0 | MemoryStore не застосовує скасовані оновлення. Пагінація старих записів використовує двійковий пошук замість повторного обходу всіх новіших записів. |
+| [log](https://github.com/goloop/log) | v2.3.3 | NaN та нескінченні float64 у структурованих полях більше не створюють невалідний JSON; записуються як null, узгоджено з іншими непредставними значеннями. |
+| [mail](https://github.com/goloop/mail) | v1.0.0 | Base64-вкладення кодується одразу в остаточний буфер. Скасування контексту перериває очікування SMTP greeting та авторизації. |
+| [middlewares](https://github.com/goloop/middlewares) | v1.0.0 | Compress враховує gzip q=0, додає Vary для обох варіантів відповіді та зберігає неявний статус першого Write при буферизації. |
+| [mistral](https://github.com/goloop/mistral) | v1.1.5 | Nil-запити native chat та stream повертають помилку замість panic. |
+| [mux](https://github.com/goloop/mux) | v1.4.1 | Перевірено маршрутизацію, fallback, mount та обгортки ResponseWriter. Підтверджених дефектів не виявлено. |
+| [norm](https://github.com/goloop/norm) | v1.0.2 | IP, IPv4 та IPv6 розбирають і канонізують адресу за один виклик netip. |
+| [observe](https://github.com/goloop/observe) | v1.0.0 | Перевірено паралельні health checks, знімки стану, panic та таймаути. Алгоритми без змін. |
+| [ollama](https://github.com/goloop/ollama) | v1.1.4 | Nil-запити повертають помилку. Некоректний JSON та error-повідомлення потоку більше не ігноруються. |
+| [openai](https://github.com/goloop/openai) | v1.3.0 | SpeechRequest.Instructions, точна передача plain text транскрипції та менше копій тексту відповіді. |
+| [openrouter](https://github.com/goloop/openrouter) | v1.1.5 | Nil-запити native chat та stream повертають помилку замість panic. Перевірено сумісний chat та обробку потоку. |
+| [opt](https://github.com/goloop/opt) | v2.4.1 | Після terminator другий -- залишається позиційним аргументом. Заперечення no- дозволено лише для bool. Розділення long option не створює зріз. |
+| [paddle](https://github.com/goloop/paddle) | v1.0.0 | Перевірено підписи webhook, обмеження відповіді, retry, ідемпотентність та курсори. Поточний API стабілізовано без зміни алгоритмів. |
+| [pgc](https://github.com/goloop/pgc) | v1.0.2 | Ліміт SQL-результату враховує порожні рядки та NULL. Таймаут не переповнюється. Callback скасування не читає змінну, що переприсвоюється. Збирання SQL використовує Builder. Згенерований адаптер масивів відхиляє незакриту лапку. |
+| [qp](https://github.com/goloop/qp) | v2.2.1 | Each(Clamp(...)) застосовується до елементів списку. Видалено повторне клонування fallback при помилці. |
+| [resp](https://github.com/goloop/resp) | v2.3.2 | Правило одиничного заголовка працює незалежно від регістру імені. Перевірено кодування, cookie та заголовки завантажень. |
+| [scs](https://github.com/goloop/scs) | v2.1.2 | Нормалізація слів використовує strings.ToLower без проміжного масиву рун. Перевірено межі абревіатур, Unicode та стилі. |
+| [self](https://github.com/goloop/self) | v1.0.0 | Оновлено двомовний каталог версій та опис змін усіх модулів. Додано відсутні огляди creem, paddle і ledger. Приклади перевіряються з локальними оновленими модулями. |
+| [session](https://github.com/goloop/session) | v1.0.0 | Перевірено підпис, ротацію ключів, абсолютний TTL та cookie. Верифікація використовує вихідний підрядок і обмежене розбиття. |
+| [set](https://github.com/goloop/set) | v2.1.2 | IsDisjoint та generic Map, Reduce, Fold приймають nil як порожню множину. Перетин починається з найменшої множини без копії великого receiver. JSON null однаковий із пробілами. |
+| [site](https://github.com/goloop/site) | v0.0.1 | Репозиторій містить лише концепцію порталу, без go.mod і виконуваного коду. Реліз v1 програмного модуля не створюється за відсутності реалізації. |
+| [slug](https://github.com/goloop/slug) | v2.4.1 | Буфер результату з WithMaxLength обмежено потрібною довжиною. Перевірено суфікси унікальності, fallback та транслітерацію. |
+| [t13n](https://github.com/goloop/t13n) | v2.2.2 | Обхід UTF-8 не створює копію всього тексту як []rune. Великий offset користувацького правила більше не переповнює індекс. |
+| [trit](https://github.com/goloop/trit) | v2.2.1 | Перевірено таблиці логіки, нормалізацію, JSON, SQL Scan, агрегати та ітератори. Підстав для зміни поведінки не виявлено. |
+| [websocket](https://github.com/goloop/websocket) | v1.0.1 | Upgrader застосовує безпечну верхню межу read limit. Валідація UTF-8 на межі фрагментів використовує фіксований буфер замість копіювання наступного фрагмента. |
+| [yaml](https://github.com/goloop/yaml) | v1.0.1 | Рекурсивні embedded-типи і циклічні pointer/interface більше не зациклюють обхід. Виправлено nil-результат WithParser, pointer-значення WithEncoder та тихе переповнення float32. |
+
+Рецепти handbook зберігають опубліковані мінімальні залежності. Перевірка у workspace використовує наведені локальні версії; для отримання виправлень у власному проєкті оновіть залежності після публікації тегів.
+
+## creem
+
+Клієнт платежів, checkout, підписок і перевірки webhook-підписів. Повтори запитів враховують ідемпотентність; тіла відповідей обмежені.
+
+`go get github.com/goloop/creem`
+
+[README](https://github.com/goloop/creem/blob/v1/README.md), [API](https://github.com/goloop/creem/blob/v1/DOC.UK.md).
+
+## paddle
+
+Клієнт транзакцій, підписок, повернень, клієнтів і customer portal. Перевірка webhook підтримує ротацію секретів і допустимий вік підпису.
+
+`go get github.com/goloop/paddle`
+
+[README](https://github.com/goloop/paddle/blob/v1/README.md), [API](https://github.com/goloop/paddle/blob/v1/DOC.UK.md).
+
+## ledger
+
+Облік кредитів із Deposit, Hold, Capture та поверненнями. MemoryStore є локальною реалізацією сховища; довговічне зберігання реалізує контракт Store. Пагінація старих записів не обходить усю історію повторно.
+
+`go get github.com/goloop/ledger`
+
+[README](https://github.com/goloop/ledger/blob/v1/README.md), [API](https://github.com/goloop/ledger/blob/v1/DOC.UK.md).

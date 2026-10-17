@@ -23,9 +23,9 @@ The current group is:
 
 - **Foundation:** `ai` (with the provider drivers `anthropic`, `openai`,
   `gemini`, `grok`, `deepseek`, `openrouter`, `ollama`, `mistral`, `cohere`),
-  `env`, `g`, `is`, `key`, `kind`, `log`, `middlewares`, `mux`, `opt`, `pgc`,
-  `qp`, `resp`, `scs`, `set`, `slug`, `t13n`, `trit`, `websocket`.
-- **Application:** `app`, `observe`, `jwt`, `auth`, `argon2id`, `session`, `mail`, `cli`.
+  `env`, `g`, `is`, `key`, `kind`, `log`, `middlewares`, `mux`, `norm`, `opt`, `pgc`,
+  `qp`, `resp`, `scs`, `set`, `slug`, `t13n`, `trit`, `websocket`, `yaml`.
+- **Application:** `app`, `observe`, `jwt`, `auth`, `argon2id`, `session`, `mail`, `cli`, `creem`, `paddle`, `ledger`.
 
 Together they cover the boring but important edges of application code: reading
 configuration from `.env` files, parsing CLI arguments, validating user input,
@@ -213,6 +213,11 @@ See [Building a service](#building-a-service) for how they fit together.
 - [**session** - signed-cookie sessions for browser apps](#session)
 - [**mail** - build and send outbound email over SMTP](#mail)
 - [**cli** - scaffold and inspect goloop-first projects](#cli)
+
+- [**creem** - payments, subscriptions and webhooks](#creem)
+- [**paddle** - billing transactions and subscriptions](#paddle)
+- [**ledger** - credit balances, holds and captures](#ledger)
+- [Module versions](#module-versions)
 
 ## ai
 
@@ -1271,3 +1276,79 @@ scaffolds a new goloop-first project so you start from a working skeleton. See
 
 Each module is intentionally small. You do not need to adopt the whole group:
 install only the module that closes the specific problem in front of you.
+
+## Module versions
+
+Local release snapshot dated 2026-10-18. Tags are prepared locally; these versions cannot be fetched from the remote repository until the tags are published. Version 1 modules keep their import path without a /v1 suffix; version 2 modules keep /v2. The self repository becomes v1.0.0 as a bilingual reference. The site repository remains a concept without a Go implementation.
+
+| Module | Version | Changes |
+|---|---|---|
+| [ai](https://github.com/goloop/ai) | v1.2.2 | Preserve empty SSE data, cap Retry-After before converting to a duration, and avoid unnecessary text allocations. |
+| [anthropic](https://github.com/goloop/anthropic) | v1.1.4 | Stop pagination when the server repeats a cursor. |
+| [app](https://github.com/goloop/app) | v1.0.0 | Publish the existing lifecycle API as version 1.0.0. |
+| [argon2id](https://github.com/goloop/argon2id) | v1.1.2 | Reject oversized encoded hashes before allocating parser fields. |
+| [auth](https://github.com/goloop/auth) | v1.0.0 | Parse refresh tokens without allocating and expose access token issue times through Subject.IssuedAt. |
+| [cli](https://github.com/goloop/cli) | v1.0.0 | Report directory traversal errors instead of marking an unreadable path as clean. |
+| [cohere](https://github.com/goloop/cohere) | v1.1.5 | Keep embedding requests unchanged, reject nil requests, and report malformed stream events. |
+| [creem](https://github.com/goloop/creem) | v1.0.0 | Publish the existing payment and webhook API as version 1.0.0. |
+| [deepseek](https://github.com/goloop/deepseek) | v1.1.5 | Reject nil native chat and stream requests before dereferencing them. |
+| [env](https://github.com/goloop/env) | v2.8.3 | Handle nil parser results and explicitly empty time and text values. |
+| [g](https://github.com/goloop/g) | v2.3.1 | Handle named floating-point overflow and nil pointers, and simplify intersection tracking. |
+| [gemini](https://github.com/goloop/gemini) | v1.2.2 | Reject nil token-count requests before accessing their fields. |
+| [grok](https://github.com/goloop/grok) | v1.2.2 | Reject nil native chat and stream requests before dereferencing them. |
+| [is](https://github.com/goloop/is) | v2.3.3 | Validate IBAN check digits and avoid redundant IP parsing and unbounded JWT splitting. |
+| [jwt](https://github.com/goloop/jwt) | v1.1.1 | Decode null audiences correctly and avoid copying signed token input. |
+| [key](https://github.com/goloop/key) | v2.1.1 | Reviewed without code changes. |
+| [kind](https://github.com/goloop/kind) | v1.0.0 | Make shape inspection safe on nil receivers and publish the stable API. |
+| [ledger](https://github.com/goloop/ledger) | v1.0.0 | Honor canceled updates and seek older ledger pages with binary search. |
+| [log](https://github.com/goloop/log) | v2.3.3 | Keep structured log output valid for non-finite floating-point values. |
+| [mail](https://github.com/goloop/mail) | v1.0.0 | Encode attachments in one buffer and interrupt SMTP setup on cancellation. |
+| [middlewares](https://github.com/goloop/middlewares) | v1.0.0 | Respect gzip quality values and preserve response status and cache variation. |
+| [mistral](https://github.com/goloop/mistral) | v1.1.5 | Reject nil native chat and stream requests. |
+| [mux](https://github.com/goloop/mux) | v1.4.1 | Reviewed without code changes. |
+| [norm](https://github.com/goloop/norm) | v1.0.2 | Normalize IP addresses with a single parse. |
+| [observe](https://github.com/goloop/observe) | v1.0.0 | Publish the existing health check API as version 1.0.0. |
+| [ollama](https://github.com/goloop/ollama) | v1.1.4 | Report malformed stream events and reject nil requests. |
+| [openai](https://github.com/goloop/openai) | v1.3.0 | Preserve plain transcripts, reduce response text allocations, and support speech instructions. |
+| [openrouter](https://github.com/goloop/openrouter) | v1.1.5 | Reject nil native chat and stream requests. |
+| [opt](https://github.com/goloop/opt) | v2.4.1 | Preserve literal separators and reject negated non-boolean options. |
+| [paddle](https://github.com/goloop/paddle) | v1.0.0 | Publish the existing payment and webhook API as version 1.0.0. |
+| [pgc](https://github.com/goloop/pgc) | v1.0.2 | Bound query result storage and timeouts, and build SQL without repeated copies. |
+| [qp](https://github.com/goloop/qp) | v2.2.1 | Apply slice clamps and avoid copying fallback values twice. |
+| [resp](https://github.com/goloop/resp) | v2.3.2 | Recognize single-value headers regardless of letter case. |
+| [scs](https://github.com/goloop/scs) | v2.1.2 | Normalize words without an intermediate rune buffer. |
+| [self](https://github.com/goloop/self) | v1.0.0 | Update the bilingual module reference for the stable releases. |
+| [session](https://github.com/goloop/session) | v1.0.0 | Verify cookie signatures without copying their signed prefix. |
+| [set](https://github.com/goloop/set) | v2.1.2 | Handle nil sets consistently and intersect from the smallest input. |
+| [site](https://github.com/goloop/site) | v0.0.1 | No implementation to release. |
+| [slug](https://github.com/goloop/slug) | v2.4.1 | Limit slug buffer allocation to the requested output length. |
+| [t13n](https://github.com/goloop/t13n) | v2.2.2 | Walk UTF-8 directly and handle large rule offsets safely. |
+| [trit](https://github.com/goloop/trit) | v2.2.1 | Reviewed without code changes. |
+| [websocket](https://github.com/goloop/websocket) | v1.0.1 | Clamp upgrade read limits and validate split UTF-8 without copying frames. |
+| [yaml](https://github.com/goloop/yaml) | v1.0.1 | Handle recursive values, custom converters, and float32 overflow safely. |
+
+Handbook recipes retain their published minimum dependencies. Workspace validation uses the local versions above; update dependencies in your own project after the tags are published to receive the fixes.
+
+## creem
+
+A payment client for checkout, subscriptions and webhook signature verification. Retries respect idempotency and response bodies are bounded.
+
+`go get github.com/goloop/creem`
+
+[README](https://github.com/goloop/creem/blob/v1/README.md), [API](https://github.com/goloop/creem/blob/v1/DOC.md).
+
+## paddle
+
+A client for transactions, subscriptions, refunds, customers and the customer portal. Webhook verification supports secret rotation and timestamp tolerance.
+
+`go get github.com/goloop/paddle`
+
+[README](https://github.com/goloop/paddle/blob/v1/README.md), [API](https://github.com/goloop/paddle/blob/v1/DOC.md).
+
+## ledger
+
+A credit ledger with deposits, holds, captures and refunds. MemoryStore provides local storage; persistent backends implement the Store contract. Older-page lookup avoids rescanning the full history.
+
+`go get github.com/goloop/ledger`
+
+[README](https://github.com/goloop/ledger/blob/v1/README.md), [API](https://github.com/goloop/ledger/blob/v1/DOC.md).
