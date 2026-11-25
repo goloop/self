@@ -347,7 +347,7 @@ func main() {
 `git` exposes native Git through Go for history, trees, files, branches,
 synchronization and backups. For an internal Git server, mount the
 `githttp` smart HTTP handler and supply the application's per-repository
-team authorization. Version v0.1.0 is in development on v0.
+team authorization. Version v0.2.0 is in development on v0.
 
 ```go
 repo, err := client.OpenManaged(ctx, root, "team/tools.git")
@@ -1313,7 +1313,7 @@ Local release snapshot dated 2026-10-18. Tags are prepared locally; these versio
 | [env](https://github.com/goloop/env) | v2.8.3 | Handle nil parser results and explicitly empty time and text values. |
 | [g](https://github.com/goloop/g) | v2.3.1 | Handle named floating-point overflow and nil pointers, and simplify intersection tracking. |
 | [gemini](https://github.com/goloop/gemini) | v1.2.2 | Reject nil token-count requests before accessing their fields. |
-| [git](#git) | v0.1.0 (in development) | Native repository operations and smart HTTP. |
+| [git](#git) | v0.2.0 (in development) | Native repository operations and smart HTTP. |
 | [grok](https://github.com/goloop/grok) | v1.2.2 | Reject nil native chat and stream requests before dereferencing them. |
 | [is](https://github.com/goloop/is) | v2.3.3 | Validate IBAN check digits and avoid redundant IP parsing and unbounded JWT splitting. |
 | [jwt](https://github.com/goloop/jwt) | v1.1.1 | Decode null audiences correctly and avoid copying signed token input. |

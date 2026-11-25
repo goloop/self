@@ -351,7 +351,7 @@ func main() {
 файлів, роботи з гілками, синхронізації та резервного копіювання.
 Для внутрішнього сервера пакет `githttp` підключає smart HTTP до
 `net/http`; застосунок перевіряє права команди на конкретний репозиторій.
-Версія v0.1.0 готується на гілці v0.
+Версія v0.2.0 готується на гілці v0.
 
 ```go
 repo, err := client.OpenManaged(ctx, root, "team/tools.git")
@@ -1320,7 +1320,7 @@ goloop-first проєкт, тож ти стартуєш із робочого с
 | [env](https://github.com/goloop/env) | v2.8.3 | Виправлено panic для nil-інтерфейсу з WithParser та явне очищення часу і тривалості порожніми значеннями. TextUnmarshaler отримує явно порожнє значення. |
 | [g](https://github.com/goloop/g) | v2.3.1 | SafeSum виявляє overflow та NaN для іменованих float-типів. Ptr приймає nil-інтерфейс. Intersection обходиться однією таблицею замість двох. |
 | [gemini](https://github.com/goloop/gemini) | v1.2.2 | CountTokens повертає ai.ErrNoRequest замість panic при nil-запиті. Переглянуто повідомлення, інструменти, цитати, embeddings та генерацію зображень. |
-| [git](#git) | v0.1.0 (у розробці) | Робочі копії, bare-репозиторії та smart HTTP. |
+| [git](#git) | v0.2.0 (у розробці) | Робочі копії, bare-репозиторії та smart HTTP. |
 | [grok](https://github.com/goloop/grok) | v1.2.2 | Виправлено nil-запити native chat та stream. Перетворення і завершення потоку перевірено тестами. |
 | [is](https://github.com/goloop/is) | v2.3.3 | IBAN перевіряє, що контрольні символи є цифрами. IP розбирає адресу один раз. JWT обмежує кількість частин при розбитті некоректного вводу. |
 | [jwt](https://github.com/goloop/jwt) | v1.1.1 | Audience коректно декодує null у nil. Verify використовує вихідний підрядок для перевірки підпису та обмежене розбиття токена. |
