@@ -23,7 +23,7 @@ The current group is:
 
 - **Foundation:** `ai` (with the provider drivers `anthropic`, `openai`,
   `gemini`, `grok`, `deepseek`, `openrouter`, `ollama`, `mistral`, `cohere`),
-  `env`, `g`, `is`, `key`, `kind`, `log`, `middlewares`, `mux`, `norm`, `opt`, `pgc`,
+  `env`, `g`, `git`, `is`, `key`, `kind`, `log`, `middlewares`, `mux`, `norm`, `opt`, `pgc`,
   `qp`, `resp`, `scs`, `set`, `slug`, `t13n`, `trit`, `websocket`, `yaml`.
 - **Application:** `app`, `observe`, `jwt`, `auth`, `argon2id`, `session`, `mail`, `cli`, `creem`, `paddle`, `ledger`.
 
@@ -184,6 +184,7 @@ See [Building a service](#building-a-service) for how they fit together.
 - [**ai** - one interface for LLM APIs, with drivers for the major providers](#ai)
 - [**env** - .env files, process environment and struct mapping](#env)
 - [**g** - generic helpers for slices, numbers, conditions and conversions](#g)
+- [**git** - repository history, bare storage and authorized Git smart HTTP](#git)
 - [**is** - format and value validation](#is)
 - [**key** - reversible short keys for uint64 IDs](#key)
 - [**kind** - cached reflection for parser and decoder authors](#kind)
@@ -340,6 +341,23 @@ func main() {
 ```
 
 **Learn more:** [github.com/goloop/g](https://github.com/goloop/g) · [reference](https://pkg.go.dev/github.com/goloop/g/v2)
+
+## git
+
+`git` exposes native Git through Go for history, trees, files, branches,
+synchronization and backups. For an internal Git server, mount the
+`githttp` smart HTTP handler and supply the application's per-repository
+team authorization. The initial v0.0.1 release is in development on v0.
+
+```go
+repo, err := client.OpenManaged(ctx, root, "team/tools.git")
+if err != nil { return err }
+entries, err := repo.Tree(ctx, "HEAD", false)
+if err != nil { return err }
+for _, entry := range entries { fmt.Println(entry.Path) }
+```
+
+[github.com/goloop/git](https://github.com/goloop/git)
 
 ## is
 
@@ -1295,6 +1313,7 @@ Local release snapshot dated 2026-10-18. Tags are prepared locally; these versio
 | [env](https://github.com/goloop/env) | v2.8.3 | Handle nil parser results and explicitly empty time and text values. |
 | [g](https://github.com/goloop/g) | v2.3.1 | Handle named floating-point overflow and nil pointers, and simplify intersection tracking. |
 | [gemini](https://github.com/goloop/gemini) | v1.2.2 | Reject nil token-count requests before accessing their fields. |
+| [git](#git) | v0.0.1 (in development) | Native repository operations and smart HTTP. |
 | [grok](https://github.com/goloop/grok) | v1.2.2 | Reject nil native chat and stream requests before dereferencing them. |
 | [is](https://github.com/goloop/is) | v2.3.3 | Validate IBAN check digits and avoid redundant IP parsing and unbounded JWT splitting. |
 | [jwt](https://github.com/goloop/jwt) | v1.1.1 | Decode null audiences correctly and avoid copying signed token input. |

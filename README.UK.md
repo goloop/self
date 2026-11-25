@@ -23,7 +23,7 @@ zero-dependency утиліт, і невеликий **прикладний яр�
 
 - **Фундамент:** `ai` (з драйверами провайдерів `anthropic`, `openai`,
   `gemini`, `grok`, `deepseek`, `openrouter`, `ollama`, `mistral`, `cohere`),
-  `env`, `g`, `is`, `key`, `kind`, `log`, `middlewares`, `mux`, `norm`, `opt`, `pgc`,
+  `env`, `g`, `git`, `is`, `key`, `kind`, `log`, `middlewares`, `mux`, `norm`, `opt`, `pgc`,
   `qp`, `resp`, `scs`, `set`, `slug`, `t13n`, `trit`, `websocket`, `yaml`.
 - **Прикладний ярус:** `app`, `observe`, `jwt`, `auth`, `argon2id`, `session`, `mail`, `cli`, `creem`, `paddle`, `ledger`.
 
@@ -185,6 +185,7 @@ func run() error {
 - [**ai** - один інтерфейс до LLM-API, з драйверами для основних провайдерів](#ai)
 - [**env** - .env файли, process environment і struct mapping](#env)
 - [**g** - generic-хелпери для слайсів, чисел, умов і конвертацій](#g)
+- [**git** - історія, bare-репозиторії та авторизований Git smart HTTP](#git)
 - [**is** - перевірка форматів і значень](#is)
 - [**key** - зворотні короткі ключі для uint64 ID](#key)
 - [**kind** - кешована рефлексія для авторів парсерів і декодерів](#kind)
@@ -343,6 +344,24 @@ func main() {
 ```
 
 **Детальніше:** [github.com/goloop/g](https://github.com/goloop/g) · [довідник](https://pkg.go.dev/github.com/goloop/g/v2)
+
+## git
+
+`git` надає Go API до встановленого Git для читання історії, дерев і
+файлів, роботи з гілками, синхронізації та резервного копіювання.
+Для внутрішнього сервера пакет `githttp` підключає smart HTTP до
+`net/http`; застосунок перевіряє права команди на конкретний репозиторій.
+Початкова версія v0.0.1 готується на гілці v0.
+
+```go
+repo, err := client.OpenManaged(ctx, root, "team/tools.git")
+if err != nil { return err }
+entries, err := repo.Tree(ctx, "HEAD", false)
+if err != nil { return err }
+for _, entry := range entries { fmt.Println(entry.Path) }
+```
+
+[github.com/goloop/git](https://github.com/goloop/git)
 
 ## is
 
@@ -1301,6 +1320,7 @@ goloop-first проєкт, тож ти стартуєш із робочого с
 | [env](https://github.com/goloop/env) | v2.8.3 | Виправлено panic для nil-інтерфейсу з WithParser та явне очищення часу і тривалості порожніми значеннями. TextUnmarshaler отримує явно порожнє значення. |
 | [g](https://github.com/goloop/g) | v2.3.1 | SafeSum виявляє overflow та NaN для іменованих float-типів. Ptr приймає nil-інтерфейс. Intersection обходиться однією таблицею замість двох. |
 | [gemini](https://github.com/goloop/gemini) | v1.2.2 | CountTokens повертає ai.ErrNoRequest замість panic при nil-запиті. Переглянуто повідомлення, інструменти, цитати, embeddings та генерацію зображень. |
+| [git](#git) | v0.0.1 (у розробці) | Робочі копії, bare-репозиторії та smart HTTP. |
 | [grok](https://github.com/goloop/grok) | v1.2.2 | Виправлено nil-запити native chat та stream. Перетворення і завершення потоку перевірено тестами. |
 | [is](https://github.com/goloop/is) | v2.3.3 | IBAN перевіряє, що контрольні символи є цифрами. IP розбирає адресу один раз. JWT обмежує кількість частин при розбитті некоректного вводу. |
 | [jwt](https://github.com/goloop/jwt) | v1.1.1 | Audience коректно декодує null у nil. Verify використовує вихідний підрядок для перевірки підпису та обмежене розбиття токена. |
