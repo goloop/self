@@ -347,7 +347,7 @@ func main() {
 `git` exposes native Git through Go for history, trees, files, branches,
 synchronization and backups. For an internal Git server, mount the
 `githttp` smart HTTP handler and supply the application's per-repository
-team authorization. Version v0.2.0 is in development on v0.
+team authorization. Published release: v0.2.2.
 
 ```go
 repo, err := client.OpenManaged(ctx, root, "team/tools.git")
@@ -1297,46 +1297,48 @@ install only the module that closes the specific problem in front of you.
 
 ## Module versions
 
-Version snapshot for 2026-11-26. Linked commit hashes identify the reviewed development versions until release tags are available.
+Published module versions as of 26 November 2026.
 
 | Module | Version | Changes |
 |---|---|---|
-| [ai](https://github.com/goloop/ai) | v1.3.0 [89aab1a](https://github.com/goloop/ai/commit/89aab1a3f71c591940ac450ffed64fa332f835ca) | Keep streaming bodies open and preserve provider state in tool calls. |
-| [anthropic](https://github.com/goloop/anthropic) | v1.1.5 [b2e223f](https://github.com/goloop/anthropic/commit/b2e223f14f5a6cf206c21ab4e1c83cb2a98a7591) | Restrict batch result downloads to the configured origin and detect incomplete streams. |
-| [app](https://github.com/goloop/app) | v1.0.1 [8a617ef](https://github.com/goloop/app/commit/8a617effc351c3796790bfa6e4555ef9f4a11462) | Serve TLS when configured and handle repeated shutdown signals. |
+| [ai](https://github.com/goloop/ai) | [v1.3.0](https://github.com/goloop/ai/tree/v1.3.0) | Keep streaming responses open after headers and accept a leading UTF-8 BOM.
+| [anthropic](https://github.com/goloop/anthropic) | [v1.1.5](https://github.com/goloop/anthropic/tree/v1.1.5) | Keep batch credentials on the configured origin and include tool choice when counting tokens.
+| [app](https://github.com/goloop/app) | [v1.0.1](https://github.com/goloop/app/tree/v1.0.1) | Serve TLS when configured and handle repeated shutdown signals. |
 | [argon2id](https://github.com/goloop/argon2id) | v1.1.2 | Reject oversized encoded hashes before allocating parser fields. |
-| [auth](https://github.com/goloop/auth) | v1.0.1 [0d63716](https://github.com/goloop/auth/commit/0d63716f57b684782ed22d9c7ac1eddb5c66fafc) | Keep refresh token rotations on the same account. |
-| [cli](https://github.com/goloop/cli) | v1.1.0 [ee5795a](https://github.com/goloop/cli/commit/ee5795a82bdf6c59145ddbb9a110a07b9e314ee3) | Read project rules from a file and honor ADDR in generated services. |
-| [cohere](https://github.com/goloop/cohere) | v1.1.6 [bed06ec](https://github.com/goloop/cohere/commit/bed06ec03cc0c3b2b1ca94c71a4c8183f509ef30) | Validate tool arguments and bound buffered response reads. |
+| [auth](https://github.com/goloop/auth) | [v1.0.1](https://github.com/goloop/auth/tree/v1.0.1) | Keep refresh token rotations on the same account. |
+| [cli](https://github.com/goloop/cli) | [v1.1.0](https://github.com/goloop/cli/tree/v1.1.0) | Read project rules from a file and honor ADDR in generated services. |
+| [cohere](https://github.com/goloop/cohere) | [v1.1.6](https://github.com/goloop/cohere/tree/v1.1.6) | Validate tool arguments and bound buffered response reads. |
 | [creem](https://github.com/goloop/creem) | v1.0.0 | Publish the existing payment and webhook API as version 1.0.0. |
-| [deepseek](https://github.com/goloop/deepseek) | v1.1.6 [5a5a1ce](https://github.com/goloop/deepseek/commit/5a5a1cea2be86f7a4170dd9cd48584de2f393ad4) | Keep long streams open and report incomplete chat responses. |
-| [env](https://github.com/goloop/env) | v2.8.4 [86bc7b0](https://github.com/goloop/env/commit/86bc7b0e3af12f42ddf046a8bf5908f74075f0aa) | Quote list elements that would split at a separator boundary. |
-| [g](https://github.com/goloop/g) | v2.3.2 [b93c827](https://github.com/goloop/g/commit/b93c8270b20c447654699c33f829ea8eebb68c71) | Handle non-finite numbers in parity checks. |
-| [gemini](https://github.com/goloop/gemini) | v1.2.3 [e868455](https://github.com/goloop/gemini/commit/e868455fd1e2195783b7e816fb92f6f911a5039a) | Preserve signed function calls when replaying conversation history. |
-| [git](#git) | v0.2.0 (in development) | Native repository operations and smart HTTP. |
-| [grok](https://github.com/goloop/grok) | v1.2.3 [6ec6c94](https://github.com/goloop/grok/commit/6ec6c9455fa725476680aee322e9688f8cd8c946) | Keep long streams open and report incomplete chat responses. |
-| [is](https://github.com/goloop/is) | v2.4.1 [09deff8](https://github.com/goloop/is/commit/09deff83d2727f45124d01d931e09a028242acbe) | Validate URL hostnames and accept year zero in RFC 3339 timestamps. |
+| [deepseek](https://github.com/goloop/deepseek) | [v1.1.6](https://github.com/goloop/deepseek/tree/v1.1.6) | Keep long streams open and report incomplete chat responses. |
+| [env](https://github.com/goloop/env) | [v2.8.4](https://github.com/goloop/env/tree/v2.8.4) | Preserve list elements and check environment entries before writing.
+| [g](https://github.com/goloop/g) | [v2.3.2](https://github.com/goloop/g/tree/v2.3.2) | Handle non-finite parity inputs and keep random floats below the upper bound.
+| [gemini](https://github.com/goloop/gemini) | [v1.2.3](https://github.com/goloop/gemini/tree/v1.2.3) | Preserve signed function calls when replaying conversation history. |
+| [git](#git) | [v0.2.2](https://github.com/goloop/git/tree/v0.2.2) | Repository operations and smart HTTP with reverse-proxy checks.
+| [grok](https://github.com/goloop/grok) | [v1.2.3](https://github.com/goloop/grok/tree/v1.2.3) | Keep long streams open and report incomplete chat responses. |
+| [is](https://github.com/goloop/is) | [v2.4.1](https://github.com/goloop/is/tree/v2.4.1) | Validate URL hostnames and accept year zero in RFC 3339 timestamps. |
 | [jwt](https://github.com/goloop/jwt) | v1.1.1 | Decode null audiences correctly and avoid copying signed token input. |
 | [key](https://github.com/goloop/key) | v2.1.1 | Reviewed without code changes. |
 | [kind](https://github.com/goloop/kind) | v1.0.0 | Make shape inspection safe on nil receivers and publish the stable API. |
-| [ledger](https://github.com/goloop/ledger) | v1.0.1 [99c50f6](https://github.com/goloop/ledger/commit/99c50f6c5e935010cfc185693519d46b22d01679) | Keep retries from changing wallets and settle holds after a full bonus replacement. |
-| [log](https://github.com/goloop/log) | v2.3.4 [29610ac](https://github.com/goloop/log/commit/29610ac9557baf125d1b0d179e4cce6d7752a252) | Preserve slog record timestamps. |
+| [ledger](https://github.com/goloop/ledger) | [v1.0.1](https://github.com/goloop/ledger/tree/v1.0.1) | Keep retries from changing wallets and settle holds after a full bonus replacement. |
+| [log](https://github.com/goloop/log) | [v2.3.4](https://github.com/goloop/log/tree/v2.3.4) | Preserve slog record timestamps. |
 | [mail](https://github.com/goloop/mail) | v1.0.0 | Encode attachments in one buffer and interrupt SMTP setup on cancellation. |
-| [middlewares](https://github.com/goloop/middlewares) | v1.0.1 [e1e0cb3](https://github.com/goloop/middlewares/commit/e1e0cb35de9a460b42480dad968e1ac77f679cf1) | Read all forwarded address header lines. |
-| [mistral](https://github.com/goloop/mistral) | v1.1.6 [bfd82cc](https://github.com/goloop/mistral/commit/bfd82cc841fde8c0d36f6801f6e73ec792433605) | Keep long streams open and report incomplete chat responses. |
+| [middlewares](https://github.com/goloop/middlewares) | [v1.1.0](https://github.com/goloop/middlewares/tree/v1.1.0) | Vary cached CORS responses and optionally cap rate limit storage.
+| [mistral](https://github.com/goloop/mistral) | [v1.1.6](https://github.com/goloop/mistral/tree/v1.1.6) | Reject partial embeddings and validate streaming tool arguments.
+| [mobilesam](https://github.com/goloop/mobilesam) | [v0.0.2](https://github.com/goloop/mobilesam/tree/v0.0.2) | ONNX Runtime adapter and HTTP service for prompt-based image segmentation. |
 | [mux](https://github.com/goloop/mux) | v1.4.1 | Reviewed without code changes. |
-| [norm](https://github.com/goloop/norm) | v1.0.2 | Normalize IP addresses with a single parse. |
-| [observe](https://github.com/goloop/observe) | v1.0.1 [4e67260](https://github.com/goloop/observe/commit/4e672604972f79d93374b5507ace7978c3721ad5) | Share in-flight readiness checks between overlapping probes. |
-| [ollama](https://github.com/goloop/ollama) | v1.1.5 [2658d26](https://github.com/goloop/ollama/commit/2658d2659ff2224b0d9f82087e7de7af3ccbce87) | Keep streams open after headers arrive and detect incomplete responses. |
-| [openai](https://github.com/goloop/openai) | v1.3.1 [a5a3df6](https://github.com/goloop/openai/commit/a5a3df6913a0db6d654b241ab25bf76574db4a10) | Keep streaming calls open and validate generated tool arguments. |
-| [openrouter](https://github.com/goloop/openrouter) | v1.1.6 [6736d9c](https://github.com/goloop/openrouter/commit/6736d9cc3a2a710bc8cf6db5f900859f413abd44) | Report provider error events even after partial output. |
+| [norm](https://github.com/goloop/norm) | [v1.0.3](https://github.com/goloop/norm/tree/v1.0.3) | Normalize IP addresses with a single parse. |
+| [observe](https://github.com/goloop/observe) | [v1.0.1](https://github.com/goloop/observe/tree/v1.0.1) | Share in-flight readiness checks between overlapping probes. |
+| [ollama](https://github.com/goloop/ollama) | [v1.1.5](https://github.com/goloop/ollama/tree/v1.1.5) | Keep streams open after headers arrive and detect incomplete responses. |
+| [openai](https://github.com/goloop/openai) | [v1.3.1](https://github.com/goloop/openai/tree/v1.3.1) | Keep streaming calls open and validate generated tool arguments. |
+| [openrouter](https://github.com/goloop/openrouter) | [v1.1.6](https://github.com/goloop/openrouter/tree/v1.1.6) | Report provider error events even after partial output. |
 | [opt](https://github.com/goloop/opt) | v2.4.1 | Preserve literal separators and reject negated non-boolean options. |
 | [paddle](https://github.com/goloop/paddle) | v1.0.0 | Publish the existing payment and webhook API as version 1.0.0. |
-| [pgc](https://github.com/goloop/pgc) | v1.0.3 | Verify schemas across databases by name and infer names from quoted SQL columns. |
+| [pgc](https://github.com/goloop/pgc) | [v1.0.4](https://github.com/goloop/pgc/tree/v1.0.4) | Verify offline generation from lock files and run PostgreSQL integration checks.
 | [qp](https://github.com/goloop/qp) | v2.2.1 | Apply slice clamps and avoid copying fallback values twice. |
 | [resp](https://github.com/goloop/resp) | v2.3.2 | Recognize single-value headers regardless of letter case. |
 | [scs](https://github.com/goloop/scs) | v2.1.2 | Normalize words without an intermediate rune buffer. |
-| [self](https://github.com/goloop/self) | v1.0.1 | Update the bilingual module version reference. |
+| [segment](https://github.com/goloop/segment) | [v0.0.1](https://github.com/goloop/segment/tree/v0.0.1) | Go types, masks and exact contours for image segmentation. |
+| [self](https://github.com/goloop/self) | v1.0.1 | Link published releases and update the runnable recipes.
 | [session](https://github.com/goloop/session) | v1.0.0 | Verify cookie signatures without copying their signed prefix. |
 | [set](https://github.com/goloop/set) | v2.1.2 | Handle nil sets consistently and intersect from the smallest input. |
 | [site](https://github.com/goloop/site) | v0.0.1 | No implementation to release. |

@@ -292,6 +292,10 @@ succeeds once provided.
 
 Next: serve something over HTTP.
 
+## Writing to the process environment
+
+`env.Marshal` checks all encoded key/value pairs before it sets any variable. Use `MarshalMap` when you want to inspect or validate the pairs yourself.
+
 ---
 
 [« Preface](00-preface.md) · [Contents](../main.md) · [JSON HTTP API »](02-http-json-api.md)

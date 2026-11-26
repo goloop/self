@@ -230,6 +230,10 @@ column stays a plain `json.RawMessage`.
 
 Part II continues with asking a language model about this data.
 
+## Running checks in CI
+
+Run `pgc check` against the committed lock to verify offline generation. Run `pgc verify` against a disposable database that has applied your migrations to check the recorded schema.
+
 ---
 
 [« Validate and clean](03-validate-and-clean.md) · [Contents](../main.md) · [Language models »](05-ai.md)

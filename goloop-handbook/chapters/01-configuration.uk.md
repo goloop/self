@@ -290,6 +290,10 @@ D. a required field (env:"...,required"):
 
 Далі: віддамо щось по HTTP.
 
+## Запис до оточення процесу
+
+`env.Marshal` перевіряє всі пари перед записом першої змінної. Використовуйте `MarshalMap` для перегляду чи власної перевірки пар.
+
 ---
 
 [« Передмова](00-preface.uk.md) · [Зміст](../main.uk.md) · [JSON HTTP API »](02-http-json-api.uk.md)

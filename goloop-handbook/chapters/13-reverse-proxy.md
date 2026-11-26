@@ -148,6 +148,10 @@ E. a handler's logs correlate with the request:
 
 Next: an AI feature shaped the way production wants it.
 
+## Headers and an in-memory limit
+
+Use `middlewares.WithoutRealIPHeader()` when the trusted proxy supplies X-Forwarded-For and leaves X-Real-IP untouched. Set `RateLimitConfig.Store` to `middlewares.NewBoundedMemoryRateLimitStore(maxKeys)` to cap per-process keys. New keys are denied until space is available, and existing keys retain their budgets.
+
 ---
 
 [« The refresh-token lifecycle](12-refresh-lifecycle.md) · [Contents](../main.md) · [AI, production shape »](14-ai-production.md)

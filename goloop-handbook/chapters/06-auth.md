@@ -184,6 +184,10 @@ Part IV.
 
 Next: readable URLs from any text.
 
+## Cookie routing and token purpose
+
+Mount strict cookie authentication on protected routes. A public sign-in route can clear an expired cookie using the same name, path and domain. Separate token purposes with distinct signing keys or explicitly enforced audiences. If you call `jwt.Verify` directly on external input, set `jwt.WithMaxBytes` to fit the HTTP limits of your application.
+
 ---
 
 [« Language models](05-ai.md) · [Contents](../main.md) · [Slugs and cases »](07-slug.md)

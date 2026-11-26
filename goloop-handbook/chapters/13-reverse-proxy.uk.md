@@ -148,6 +148,10 @@ E. a handler's logs correlate with the request:
 
 Далі: AI-фіча у формі, якої хоче продакшн.
 
+## Заголовки та ліміти в пам’яті
+
+Використовуйте `middlewares.WithoutRealIPHeader()`, якщо довірений проксі додає X-Forwarded-For і не змінює X-Real-IP. Передайте `middlewares.NewBoundedMemoryRateLimitStore(maxKeys)` у `RateLimitConfig.Store`, щоб обмежити кількість ключів у процесі. При заповненні нові ключі відхиляються до звільнення місця, а чинні зберігають бюджет.
+
 ---
 
 [« Життєвий цикл refresh-токена](12-refresh-lifecycle.uk.md) · [Зміст](../main.uk.md) · [AI у продакшн-формі »](14-ai-production.uk.md)

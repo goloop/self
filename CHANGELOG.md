@@ -2,7 +2,7 @@
 
 ## [1.0.1] - 2026-11-26
 
-Update the module versions in both guides.
+Link published module releases and update the handbook recipes to use them. Explain cookie routing, trusted proxies, configuration writes and streaming deadlines.
 
 ## [1.0.0] - 2026-10-18
 
