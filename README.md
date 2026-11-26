@@ -1261,12 +1261,12 @@ with `go install github.com/goloop/cli@latest` (the command is `goloop`).
 
 It scaffolds a minimal service (`goloop new`), reports which expected tools are
 installed (`goloop doctor`), summarizes the module in the current directory
-(`goloop status`), and scans a tree for stray editor/assistant artifacts
+(`goloop status`), and scans a tree for substrings listed in a project rule file
 (`goloop check`).
 
 ```text
 goloop new <name> [--module path] [--dir path] [--force]
-goloop check [dir]     scan a project tree
+goloop check --deny-file rules.txt [dir]    scan a project tree
 goloop doctor          check that expected tools are installed
 goloop status          summarize the module in the current directory
 goloop version         print the CLI version
@@ -1297,46 +1297,46 @@ install only the module that closes the specific problem in front of you.
 
 ## Module versions
 
-Local release snapshot dated 2026-10-18. Tags are prepared locally; these versions cannot be fetched from the remote repository until the tags are published. Version 1 modules keep their import path without a /v1 suffix; version 2 modules keep /v2. The self repository becomes v1.0.0 as a bilingual reference. The site repository remains a concept without a Go implementation.
+Version snapshot for 2026-11-26. Linked commit hashes identify the reviewed development versions until release tags are available.
 
 | Module | Version | Changes |
 |---|---|---|
-| [ai](https://github.com/goloop/ai) | v1.2.2 | Preserve empty SSE data, cap Retry-After before converting to a duration, and avoid unnecessary text allocations. |
-| [anthropic](https://github.com/goloop/anthropic) | v1.1.4 | Stop pagination when the server repeats a cursor. |
-| [app](https://github.com/goloop/app) | v1.0.0 | Publish the existing lifecycle API as version 1.0.0. |
+| [ai](https://github.com/goloop/ai) | v1.3.0 [89aab1a](https://github.com/goloop/ai/commit/89aab1a3f71c591940ac450ffed64fa332f835ca) | Keep streaming bodies open and preserve provider state in tool calls. |
+| [anthropic](https://github.com/goloop/anthropic) | v1.1.5 [b2e223f](https://github.com/goloop/anthropic/commit/b2e223f14f5a6cf206c21ab4e1c83cb2a98a7591) | Restrict batch result downloads to the configured origin and detect incomplete streams. |
+| [app](https://github.com/goloop/app) | v1.0.1 [8a617ef](https://github.com/goloop/app/commit/8a617effc351c3796790bfa6e4555ef9f4a11462) | Serve TLS when configured and handle repeated shutdown signals. |
 | [argon2id](https://github.com/goloop/argon2id) | v1.1.2 | Reject oversized encoded hashes before allocating parser fields. |
-| [auth](https://github.com/goloop/auth) | v1.0.0 | Parse refresh tokens without allocating and expose access token issue times through Subject.IssuedAt. |
-| [cli](https://github.com/goloop/cli) | v1.0.0 | Report directory traversal errors instead of marking an unreadable path as clean. |
-| [cohere](https://github.com/goloop/cohere) | v1.1.5 | Keep embedding requests unchanged, reject nil requests, and report malformed stream events. |
+| [auth](https://github.com/goloop/auth) | v1.0.1 [0d63716](https://github.com/goloop/auth/commit/0d63716f57b684782ed22d9c7ac1eddb5c66fafc) | Keep refresh token rotations on the same account. |
+| [cli](https://github.com/goloop/cli) | v1.1.0 [ee5795a](https://github.com/goloop/cli/commit/ee5795a82bdf6c59145ddbb9a110a07b9e314ee3) | Read project rules from a file and honor ADDR in generated services. |
+| [cohere](https://github.com/goloop/cohere) | v1.1.6 [bed06ec](https://github.com/goloop/cohere/commit/bed06ec03cc0c3b2b1ca94c71a4c8183f509ef30) | Validate tool arguments and bound buffered response reads. |
 | [creem](https://github.com/goloop/creem) | v1.0.0 | Publish the existing payment and webhook API as version 1.0.0. |
-| [deepseek](https://github.com/goloop/deepseek) | v1.1.5 | Reject nil native chat and stream requests before dereferencing them. |
-| [env](https://github.com/goloop/env) | v2.8.3 | Handle nil parser results and explicitly empty time and text values. |
-| [g](https://github.com/goloop/g) | v2.3.1 | Handle named floating-point overflow and nil pointers, and simplify intersection tracking. |
-| [gemini](https://github.com/goloop/gemini) | v1.2.2 | Reject nil token-count requests before accessing their fields. |
+| [deepseek](https://github.com/goloop/deepseek) | v1.1.6 [5a5a1ce](https://github.com/goloop/deepseek/commit/5a5a1cea2be86f7a4170dd9cd48584de2f393ad4) | Keep long streams open and report incomplete chat responses. |
+| [env](https://github.com/goloop/env) | v2.8.4 [5ad0803](https://github.com/goloop/env/commit/5ad08032f00302d3a0c720fd5e5d42d46a3e8967) | Quote list elements that would split at a separator boundary. |
+| [g](https://github.com/goloop/g) | v2.3.2 [b93c827](https://github.com/goloop/g/commit/b93c8270b20c447654699c33f829ea8eebb68c71) | Handle non-finite numbers in parity checks. |
+| [gemini](https://github.com/goloop/gemini) | v1.2.3 [e868455](https://github.com/goloop/gemini/commit/e868455fd1e2195783b7e816fb92f6f911a5039a) | Preserve signed function calls when replaying conversation history. |
 | [git](#git) | v0.2.0 (in development) | Native repository operations and smart HTTP. |
-| [grok](https://github.com/goloop/grok) | v1.2.2 | Reject nil native chat and stream requests before dereferencing them. |
-| [is](https://github.com/goloop/is) | v2.3.3 | Validate IBAN check digits and avoid redundant IP parsing and unbounded JWT splitting. |
+| [grok](https://github.com/goloop/grok) | v1.2.3 [6ec6c94](https://github.com/goloop/grok/commit/6ec6c9455fa725476680aee322e9688f8cd8c946) | Keep long streams open and report incomplete chat responses. |
+| [is](https://github.com/goloop/is) | v2.4.1 [09deff8](https://github.com/goloop/is/commit/09deff83d2727f45124d01d931e09a028242acbe) | Validate URL hostnames and accept year zero in RFC 3339 timestamps. |
 | [jwt](https://github.com/goloop/jwt) | v1.1.1 | Decode null audiences correctly and avoid copying signed token input. |
 | [key](https://github.com/goloop/key) | v2.1.1 | Reviewed without code changes. |
 | [kind](https://github.com/goloop/kind) | v1.0.0 | Make shape inspection safe on nil receivers and publish the stable API. |
-| [ledger](https://github.com/goloop/ledger) | v1.0.0 | Honor canceled updates and seek older ledger pages with binary search. |
-| [log](https://github.com/goloop/log) | v2.3.3 | Keep structured log output valid for non-finite floating-point values. |
+| [ledger](https://github.com/goloop/ledger) | v1.0.1 [c4b5ff3](https://github.com/goloop/ledger/commit/c4b5ff368894bbdc3b3e93002e0cc22390e2f1b3) | Keep retries from changing wallets and settle holds after a full bonus replacement. |
+| [log](https://github.com/goloop/log) | v2.3.4 [29610ac](https://github.com/goloop/log/commit/29610ac9557baf125d1b0d179e4cce6d7752a252) | Preserve slog record timestamps. |
 | [mail](https://github.com/goloop/mail) | v1.0.0 | Encode attachments in one buffer and interrupt SMTP setup on cancellation. |
-| [middlewares](https://github.com/goloop/middlewares) | v1.0.0 | Respect gzip quality values and preserve response status and cache variation. |
-| [mistral](https://github.com/goloop/mistral) | v1.1.5 | Reject nil native chat and stream requests. |
+| [middlewares](https://github.com/goloop/middlewares) | v1.0.1 [e1e0cb3](https://github.com/goloop/middlewares/commit/e1e0cb35de9a460b42480dad968e1ac77f679cf1) | Read all forwarded address header lines. |
+| [mistral](https://github.com/goloop/mistral) | v1.1.6 [bfd82cc](https://github.com/goloop/mistral/commit/bfd82cc841fde8c0d36f6801f6e73ec792433605) | Keep long streams open and report incomplete chat responses. |
 | [mux](https://github.com/goloop/mux) | v1.4.1 | Reviewed without code changes. |
 | [norm](https://github.com/goloop/norm) | v1.0.2 | Normalize IP addresses with a single parse. |
-| [observe](https://github.com/goloop/observe) | v1.0.0 | Publish the existing health check API as version 1.0.0. |
-| [ollama](https://github.com/goloop/ollama) | v1.1.4 | Report malformed stream events and reject nil requests. |
-| [openai](https://github.com/goloop/openai) | v1.3.0 | Preserve plain transcripts, reduce response text allocations, and support speech instructions. |
-| [openrouter](https://github.com/goloop/openrouter) | v1.1.5 | Reject nil native chat and stream requests. |
+| [observe](https://github.com/goloop/observe) | v1.0.1 [6ee3328](https://github.com/goloop/observe/commit/6ee33288ebe69a0d876e0dc587c79e96924228e5) | Share in-flight readiness checks between overlapping probes. |
+| [ollama](https://github.com/goloop/ollama) | v1.1.5 [2658d26](https://github.com/goloop/ollama/commit/2658d2659ff2224b0d9f82087e7de7af3ccbce87) | Keep streams open after headers arrive and detect incomplete responses. |
+| [openai](https://github.com/goloop/openai) | v1.3.1 [a5a3df6](https://github.com/goloop/openai/commit/a5a3df6913a0db6d654b241ab25bf76574db4a10) | Keep streaming calls open and validate generated tool arguments. |
+| [openrouter](https://github.com/goloop/openrouter) | v1.1.6 [6736d9c](https://github.com/goloop/openrouter/commit/6736d9cc3a2a710bc8cf6db5f900859f413abd44) | Report provider error events even after partial output. |
 | [opt](https://github.com/goloop/opt) | v2.4.1 | Preserve literal separators and reject negated non-boolean options. |
 | [paddle](https://github.com/goloop/paddle) | v1.0.0 | Publish the existing payment and webhook API as version 1.0.0. |
 | [pgc](https://github.com/goloop/pgc) | v1.0.2 | Bound query result storage and timeouts, and build SQL without repeated copies. |
 | [qp](https://github.com/goloop/qp) | v2.2.1 | Apply slice clamps and avoid copying fallback values twice. |
 | [resp](https://github.com/goloop/resp) | v2.3.2 | Recognize single-value headers regardless of letter case. |
 | [scs](https://github.com/goloop/scs) | v2.1.2 | Normalize words without an intermediate rune buffer. |
-| [self](https://github.com/goloop/self) | v1.0.0 | Update the bilingual module reference for the stable releases. |
+| [self](https://github.com/goloop/self) | v1.0.1 | Update the bilingual module version reference. |
 | [session](https://github.com/goloop/session) | v1.0.0 | Verify cookie signatures without copying their signed prefix. |
 | [set](https://github.com/goloop/set) | v2.1.2 | Handle nil sets consistently and intersect from the smallest input. |
 | [site](https://github.com/goloop/site) | v0.0.1 | No implementation to release. |

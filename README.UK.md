@@ -1268,12 +1268,12 @@ Go-проєкти. Це невеликий диспетчер поверх `os.A
 
 Він генерує мінімальний сервіс (`goloop new`), повідомляє, які очікувані
 інструменти встановлені (`goloop doctor`), підсумовує модуль у поточній теці
-(`goloop status`) і сканує дерево на випадкові артефакти редактора/асистента
+(`goloop status`) і сканує дерево на підрядки з файлу правил проєкту
 (`goloop check`).
 
 ```text
 goloop new <name> [--module path] [--dir path] [--force]
-goloop check [dir]     сканувати дерево проєкту
+goloop check --deny-file rules.txt [dir]    сканувати дерево проєкту
 goloop doctor          перевірити наявність очікуваних інструментів
 goloop status          підсумувати модуль у поточній теці
 goloop version         вивести версію CLI
@@ -1304,46 +1304,46 @@ goloop-first проєкт, тож ти стартуєш із робочого с
 
 ## Версії модулів
 
-Локальний зріз релізів від 2026-10-18. Теги підготовлено локально; до їх публікації ці версії не можна завантажити з віддаленого репозиторію. Модулі v1 зберігають шлях без суфікса /v1; модулі v2 зберігають /v2. Репозиторій self переходить на v1.0.0 як двомовний довідник. site залишається концепцією без Go-реалізації.
+Версії станом на 2026-11-26. Посилання на коміти вказують на перевірені версії у гілках розробки до публікації релізних тегів.
 
 | Модуль | Версія | Зміни |
 |---|---|---|
-| [ai](https://github.com/goloop/ai) | v1.2.2 | Виправлено втрату порожніх SSE-даних і переповнення Retry-After. Response.Text виділяє точний розмір буфера та повертає одиничний текст без копіювання. |
-| [anthropic](https://github.com/goloop/anthropic) | v1.1.4 | Виправлено нескінченну пагінацію при повторенні курсора сервером. Перевірено перетворення повідомлень, потік, batch та обмеження відповіді. |
-| [app](https://github.com/goloop/app) | v1.0.0 | Перевірено запуск, згортання компонентів при помилках, таймаути завершення, HTTP і worker. Алгоритми залишено без змін; стабілізація API у v1. |
+| [ai](https://github.com/goloop/ai) | v1.3.0 [89aab1a](https://github.com/goloop/ai/commit/89aab1a3f71c591940ac450ffed64fa332f835ca) | Потокові відповіді живуть до закриття або скасування контексту. Виклики інструментів зберігають дані продовження. |
+| [anthropic](https://github.com/goloop/anthropic) | v1.1.5 [b2e223f](https://github.com/goloop/anthropic/commit/b2e223f14f5a6cf206c21ab4e1c83cb2a98a7591) | Завантаження результатів пакетної обробки обмежено налаштованим сервером. Обрив потоку повертає помилку. |
+| [app](https://github.com/goloop/app) | v1.0.1 [8a617ef](https://github.com/goloop/app/commit/8a617effc351c3796790bfa6e4555ef9f4a11462) | HTTP-сервер враховує конфігурацію TLS. Повторні сигнали зупинки обробляються й під час старту. |
 | [argon2id](https://github.com/goloop/argon2id) | v1.1.2 | Додано ранню перевірку довжини хешу перед розбиттям рядка. Великий некоректний ввід більше не спричиняє пропорційне виділення масиву підрядків. Криптографічний алгоритм без змін. |
-| [auth](https://github.com/goloop/auth) | v1.0.0 | Стабільний API, Subject.IssuedAt і розбір refresh token без алокацій. |
-| [cli](https://github.com/goloop/cli) | v1.0.0 | Виправлено хибний успішний результат сканування відсутнього або недоступного каталогу. Шаблон сервісу посилається на app v1.0.0. |
-| [cohere](https://github.com/goloop/cohere) | v1.1.5 | Embeddings більше не змінює переданий запит. Nil-запити chat, stream і embeddings повертають помилку замість panic. ChatStream повідомляє про пошкоджений JSON замість тихого пропуску події. |
+| [auth](https://github.com/goloop/auth) | v1.0.1 [0d63716](https://github.com/goloop/auth/commit/0d63716f57b684782ed22d9c7ac1eddb5c66fafc) | Ротація refresh-токена зберігає обліковий запис. |
+| [cli](https://github.com/goloop/cli) | v1.1.0 [ee5795a](https://github.com/goloop/cli/commit/ee5795a82bdf6c59145ddbb9a110a07b9e314ee3) | Команда check читає правила з файлу, а нові сервіси використовують ADDR. |
+| [cohere](https://github.com/goloop/cohere) | v1.1.6 [bed06ec](https://github.com/goloop/cohere/commit/bed06ec03cc0c3b2b1ca94c71a4c8183f509ef30) | Перевіряються аргументи інструментів та розмір буферизованих відповідей. |
 | [creem](https://github.com/goloop/creem) | v1.0.0 | Перевірено повтори HTTP-запитів, обмеження тіла, підписи webhook, пагінацію і декодування часу. Підстав для зміни алгоритмів не виявлено; стабілізація поточного API. |
-| [deepseek](https://github.com/goloop/deepseek) | v1.1.5 | У native chat та stream nil-запити більше не спричиняють panic. Перевірено конвертацію, накопичення tool calls, помилки та завершення потоку. |
-| [env](https://github.com/goloop/env) | v2.8.3 | Виправлено panic для nil-інтерфейсу з WithParser та явне очищення часу і тривалості порожніми значеннями. TextUnmarshaler отримує явно порожнє значення. |
-| [g](https://github.com/goloop/g) | v2.3.1 | SafeSum виявляє overflow та NaN для іменованих float-типів. Ptr приймає nil-інтерфейс. Intersection обходиться однією таблицею замість двох. |
-| [gemini](https://github.com/goloop/gemini) | v1.2.2 | CountTokens повертає ai.ErrNoRequest замість panic при nil-запиті. Переглянуто повідомлення, інструменти, цитати, embeddings та генерацію зображень. |
+| [deepseek](https://github.com/goloop/deepseek) | v1.1.6 [5a5a1ce](https://github.com/goloop/deepseek/commit/5a5a1cea2be86f7a4170dd9cd48584de2f393ad4) | Довгі потоки залишаються відкритими. Обрив відповіді повертає помилку. |
+| [env](https://github.com/goloop/env) | v2.8.4 [5ad0803](https://github.com/goloop/env/commit/5ad08032f00302d3a0c720fd5e5d42d46a3e8967) | Екрануються елементи списку на межі багатосимвольного роздільника. |
+| [g](https://github.com/goloop/g) | v2.3.2 [b93c827](https://github.com/goloop/g/commit/b93c8270b20c447654699c33f829ea8eebb68c71) | Перевірки парності відхиляють нескінченність і NaN. |
+| [gemini](https://github.com/goloop/gemini) | v1.2.3 [e868455](https://github.com/goloop/gemini/commit/e868455fd1e2195783b7e816fb92f6f911a5039a) | Підпис виклику функції зберігається під час повторного надсилання історії. |
 | [git](#git) | v0.2.0 (у розробці) | Робочі копії, bare-репозиторії та smart HTTP. |
-| [grok](https://github.com/goloop/grok) | v1.2.2 | Виправлено nil-запити native chat та stream. Перетворення і завершення потоку перевірено тестами. |
-| [is](https://github.com/goloop/is) | v2.3.3 | IBAN перевіряє, що контрольні символи є цифрами. IP розбирає адресу один раз. JWT обмежує кількість частин при розбитті некоректного вводу. |
+| [grok](https://github.com/goloop/grok) | v1.2.3 [6ec6c94](https://github.com/goloop/grok/commit/6ec6c9455fa725476680aee322e9688f8cd8c946) | Довгі потоки залишаються відкритими. Обрив відповіді повертає помилку. |
+| [is](https://github.com/goloop/is) | v2.4.1 [09deff8](https://github.com/goloop/is/commit/09deff83d2727f45124d01d931e09a028242acbe) | URL потребує імені хоста. Перевірка часу RFC 3339 приймає рік 0000. |
 | [jwt](https://github.com/goloop/jwt) | v1.1.1 | Audience коректно декодує null у nil. Verify використовує вихідний підрядок для перевірки підпису та обмежене розбиття токена. |
 | [key](https://github.com/goloop/key) | v2.1.1 | Перевірено межі uint64, UTF-8, канонічність ключів, відбір випадкових значень та завершення ітераторів. Підтверджених багів чи необхідної оптимізації не виявлено. |
 | [kind](https://github.com/goloop/kind) | v1.0.0 | Depth, Leaf та Base більше не падають на nil receiver. Перевірено рекурсивні дескриптори, кеш і копії індексів полів. |
-| [ledger](https://github.com/goloop/ledger) | v1.0.0 | MemoryStore не застосовує скасовані оновлення. Пагінація старих записів використовує двійковий пошук замість повторного обходу всіх новіших записів. |
-| [log](https://github.com/goloop/log) | v2.3.3 | NaN та нескінченні float64 у структурованих полях більше не створюють невалідний JSON; записуються як null, узгоджено з іншими непредставними значеннями. |
+| [ledger](https://github.com/goloop/ledger) | v1.0.1 [c4b5ff3](https://github.com/goloop/ledger/commit/c4b5ff368894bbdc3b3e93002e0cc22390e2f1b3) | Повтори операцій зберігають журнал. Утримку можна зняти після повної заміни бонусного кошика. |
+| [log](https://github.com/goloop/log) | v2.3.4 [29610ac](https://github.com/goloop/log/commit/29610ac9557baf125d1b0d179e4cce6d7752a252) | Зберігається час події зі slog.Record. |
 | [mail](https://github.com/goloop/mail) | v1.0.0 | Base64-вкладення кодується одразу в остаточний буфер. Скасування контексту перериває очікування SMTP greeting та авторизації. |
-| [middlewares](https://github.com/goloop/middlewares) | v1.0.0 | Compress враховує gzip q=0, додає Vary для обох варіантів відповіді та зберігає неявний статус першого Write при буферизації. |
-| [mistral](https://github.com/goloop/mistral) | v1.1.5 | Nil-запити native chat та stream повертають помилку замість panic. |
+| [middlewares](https://github.com/goloop/middlewares) | v1.0.1 [e1e0cb3](https://github.com/goloop/middlewares/commit/e1e0cb35de9a460b42480dad968e1ac77f679cf1) | RealIP враховує всі рядки заголовка X-Forwarded-For. |
+| [mistral](https://github.com/goloop/mistral) | v1.1.6 [bfd82cc](https://github.com/goloop/mistral/commit/bfd82cc841fde8c0d36f6801f6e73ec792433605) | Довгі потоки залишаються відкритими. Обрив відповіді повертає помилку. |
 | [mux](https://github.com/goloop/mux) | v1.4.1 | Перевірено маршрутизацію, fallback, mount та обгортки ResponseWriter. Підтверджених дефектів не виявлено. |
 | [norm](https://github.com/goloop/norm) | v1.0.2 | IP, IPv4 та IPv6 розбирають і канонізують адресу за один виклик netip. |
-| [observe](https://github.com/goloop/observe) | v1.0.0 | Перевірено паралельні health checks, знімки стану, panic та таймаути. Алгоритми без змін. |
-| [ollama](https://github.com/goloop/ollama) | v1.1.4 | Nil-запити повертають помилку. Некоректний JSON та error-повідомлення потоку більше не ігноруються. |
-| [openai](https://github.com/goloop/openai) | v1.3.0 | SpeechRequest.Instructions, точна передача plain text транскрипції та менше копій тексту відповіді. |
-| [openrouter](https://github.com/goloop/openrouter) | v1.1.5 | Nil-запити native chat та stream повертають помилку замість panic. Перевірено сумісний chat та обробку потоку. |
+| [observe](https://github.com/goloop/observe) | v1.0.1 [6ee3328](https://github.com/goloop/observe/commit/6ee33288ebe69a0d876e0dc587c79e96924228e5) | Одночасні перевірки готовності очікують один виклик для кожної залежності. |
+| [ollama](https://github.com/goloop/ollama) | v1.1.5 [2658d26](https://github.com/goloop/ollama/commit/2658d2659ff2224b0d9f82087e7de7af3ccbce87) | Після надходження заголовків потік залишається відкритим. Обрив повертає помилку. |
+| [openai](https://github.com/goloop/openai) | v1.3.1 [a5a3df6](https://github.com/goloop/openai/commit/a5a3df6913a0db6d654b241ab25bf76574db4a10) | Потокові запити враховують контекст. Перевіряються аргументи викликів інструментів. |
+| [openrouter](https://github.com/goloop/openrouter) | v1.1.6 [6736d9c](https://github.com/goloop/openrouter/commit/6736d9cc3a2a710bc8cf6db5f900859f413abd44) | Помилка провайдера повертається й після отримання частини відповіді. |
 | [opt](https://github.com/goloop/opt) | v2.4.1 | Після terminator другий -- залишається позиційним аргументом. Заперечення no- дозволено лише для bool. Розділення long option не створює зріз. |
 | [paddle](https://github.com/goloop/paddle) | v1.0.0 | Перевірено підписи webhook, обмеження відповіді, retry, ідемпотентність та курсори. Поточний API стабілізовано без зміни алгоритмів. |
 | [pgc](https://github.com/goloop/pgc) | v1.0.2 | Ліміт SQL-результату враховує порожні рядки та NULL. Таймаут не переповнюється. Callback скасування не читає змінну, що переприсвоюється. Збирання SQL використовує Builder. Згенерований адаптер масивів відхиляє незакриту лапку. |
 | [qp](https://github.com/goloop/qp) | v2.2.1 | Each(Clamp(...)) застосовується до елементів списку. Видалено повторне клонування fallback при помилці. |
 | [resp](https://github.com/goloop/resp) | v2.3.2 | Правило одиничного заголовка працює незалежно від регістру імені. Перевірено кодування, cookie та заголовки завантажень. |
 | [scs](https://github.com/goloop/scs) | v2.1.2 | Нормалізація слів використовує strings.ToLower без проміжного масиву рун. Перевірено межі абревіатур, Unicode та стилі. |
-| [self](https://github.com/goloop/self) | v1.0.0 | Оновлено двомовний каталог версій та опис змін усіх модулів. Додано відсутні огляди creem, paddle і ledger. Приклади перевіряються з локальними оновленими модулями. |
+| [self](https://github.com/goloop/self) | v1.0.1 | Оновлено двомовну таблицю версій. |
 | [session](https://github.com/goloop/session) | v1.0.0 | Перевірено підпис, ротацію ключів, абсолютний TTL та cookie. Верифікація використовує вихідний підрядок і обмежене розбиття. |
 | [set](https://github.com/goloop/set) | v2.1.2 | IsDisjoint та generic Map, Reduce, Fold приймають nil як порожню множину. Перетин починається з найменшої множини без копії великого receiver. JSON null однаковий із пробілами. |
 | [site](https://github.com/goloop/site) | v0.0.1 | Репозиторій містить лише концепцію порталу, без go.mod і виконуваного коду. Реліз v1 програмного модуля не створюється за відсутності реалізації. |
