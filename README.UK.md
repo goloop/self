@@ -1317,7 +1317,7 @@ goloop-first проєкт, тож ти стартуєш із робочого с
 | [cohere](https://github.com/goloop/cohere) | v1.1.6 [bed06ec](https://github.com/goloop/cohere/commit/bed06ec03cc0c3b2b1ca94c71a4c8183f509ef30) | Перевіряються аргументи інструментів та розмір буферизованих відповідей. |
 | [creem](https://github.com/goloop/creem) | v1.0.0 | Перевірено повтори HTTP-запитів, обмеження тіла, підписи webhook, пагінацію і декодування часу. Підстав для зміни алгоритмів не виявлено; стабілізація поточного API. |
 | [deepseek](https://github.com/goloop/deepseek) | v1.1.6 [5a5a1ce](https://github.com/goloop/deepseek/commit/5a5a1cea2be86f7a4170dd9cd48584de2f393ad4) | Довгі потоки залишаються відкритими. Обрив відповіді повертає помилку. |
-| [env](https://github.com/goloop/env) | v2.8.4 [5ad0803](https://github.com/goloop/env/commit/5ad08032f00302d3a0c720fd5e5d42d46a3e8967) | Екрануються елементи списку на межі багатосимвольного роздільника. |
+| [env](https://github.com/goloop/env) | v2.8.4 [86bc7b0](https://github.com/goloop/env/commit/86bc7b0e3af12f42ddf046a8bf5908f74075f0aa) | Екрануються елементи списку на межі багатосимвольного роздільника. |
 | [g](https://github.com/goloop/g) | v2.3.2 [b93c827](https://github.com/goloop/g/commit/b93c8270b20c447654699c33f829ea8eebb68c71) | Перевірки парності відхиляють нескінченність і NaN. |
 | [gemini](https://github.com/goloop/gemini) | v1.2.3 [e868455](https://github.com/goloop/gemini/commit/e868455fd1e2195783b7e816fb92f6f911a5039a) | Підпис виклику функції зберігається під час повторного надсилання історії. |
 | [git](#git) | v0.2.0 (у розробці) | Робочі копії, bare-репозиторії та smart HTTP. |
@@ -1326,14 +1326,14 @@ goloop-first проєкт, тож ти стартуєш із робочого с
 | [jwt](https://github.com/goloop/jwt) | v1.1.1 | Audience коректно декодує null у nil. Verify використовує вихідний підрядок для перевірки підпису та обмежене розбиття токена. |
 | [key](https://github.com/goloop/key) | v2.1.1 | Перевірено межі uint64, UTF-8, канонічність ключів, відбір випадкових значень та завершення ітераторів. Підтверджених багів чи необхідної оптимізації не виявлено. |
 | [kind](https://github.com/goloop/kind) | v1.0.0 | Depth, Leaf та Base більше не падають на nil receiver. Перевірено рекурсивні дескриптори, кеш і копії індексів полів. |
-| [ledger](https://github.com/goloop/ledger) | v1.0.1 [c4b5ff3](https://github.com/goloop/ledger/commit/c4b5ff368894bbdc3b3e93002e0cc22390e2f1b3) | Повтори операцій зберігають журнал. Утримку можна зняти після повної заміни бонусного кошика. |
+| [ledger](https://github.com/goloop/ledger) | v1.0.1 [99c50f6](https://github.com/goloop/ledger/commit/99c50f6c5e935010cfc185693519d46b22d01679) | Повтори операцій зберігають журнал. Утримку можна зняти після повної заміни бонусного кошика. |
 | [log](https://github.com/goloop/log) | v2.3.4 [29610ac](https://github.com/goloop/log/commit/29610ac9557baf125d1b0d179e4cce6d7752a252) | Зберігається час події зі slog.Record. |
 | [mail](https://github.com/goloop/mail) | v1.0.0 | Base64-вкладення кодується одразу в остаточний буфер. Скасування контексту перериває очікування SMTP greeting та авторизації. |
 | [middlewares](https://github.com/goloop/middlewares) | v1.0.1 [e1e0cb3](https://github.com/goloop/middlewares/commit/e1e0cb35de9a460b42480dad968e1ac77f679cf1) | RealIP враховує всі рядки заголовка X-Forwarded-For. |
 | [mistral](https://github.com/goloop/mistral) | v1.1.6 [bfd82cc](https://github.com/goloop/mistral/commit/bfd82cc841fde8c0d36f6801f6e73ec792433605) | Довгі потоки залишаються відкритими. Обрив відповіді повертає помилку. |
 | [mux](https://github.com/goloop/mux) | v1.4.1 | Перевірено маршрутизацію, fallback, mount та обгортки ResponseWriter. Підтверджених дефектів не виявлено. |
 | [norm](https://github.com/goloop/norm) | v1.0.2 | IP, IPv4 та IPv6 розбирають і канонізують адресу за один виклик netip. |
-| [observe](https://github.com/goloop/observe) | v1.0.1 [6ee3328](https://github.com/goloop/observe/commit/6ee33288ebe69a0d876e0dc587c79e96924228e5) | Одночасні перевірки готовності очікують один виклик для кожної залежності. |
+| [observe](https://github.com/goloop/observe) | v1.0.1 [4e67260](https://github.com/goloop/observe/commit/4e672604972f79d93374b5507ace7978c3721ad5) | Одночасні перевірки готовності очікують один виклик для кожної залежності. |
 | [ollama](https://github.com/goloop/ollama) | v1.1.5 [2658d26](https://github.com/goloop/ollama/commit/2658d2659ff2224b0d9f82087e7de7af3ccbce87) | Після надходження заголовків потік залишається відкритим. Обрив повертає помилку. |
 | [openai](https://github.com/goloop/openai) | v1.3.1 [a5a3df6](https://github.com/goloop/openai/commit/a5a3df6913a0db6d654b241ab25bf76574db4a10) | Потокові запити враховують контекст. Перевіряються аргументи викликів інструментів. |
 | [openrouter](https://github.com/goloop/openrouter) | v1.1.6 [6736d9c](https://github.com/goloop/openrouter/commit/6736d9cc3a2a710bc8cf6db5f900859f413abd44) | Помилка провайдера повертається й після отримання частини відповіді. |
