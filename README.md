@@ -1332,7 +1332,7 @@ Version snapshot for 2026-11-26. Linked commit hashes identify the reviewed deve
 | [openrouter](https://github.com/goloop/openrouter) | v1.1.6 [6736d9c](https://github.com/goloop/openrouter/commit/6736d9cc3a2a710bc8cf6db5f900859f413abd44) | Report provider error events even after partial output. |
 | [opt](https://github.com/goloop/opt) | v2.4.1 | Preserve literal separators and reject negated non-boolean options. |
 | [paddle](https://github.com/goloop/paddle) | v1.0.0 | Publish the existing payment and webhook API as version 1.0.0. |
-| [pgc](https://github.com/goloop/pgc) | v1.0.2 | Bound query result storage and timeouts, and build SQL without repeated copies. |
+| [pgc](https://github.com/goloop/pgc) | v1.0.3 | Verify schemas across databases by name and infer names from quoted SQL columns. |
 | [qp](https://github.com/goloop/qp) | v2.2.1 | Apply slice clamps and avoid copying fallback values twice. |
 | [resp](https://github.com/goloop/resp) | v2.3.2 | Recognize single-value headers regardless of letter case. |
 | [scs](https://github.com/goloop/scs) | v2.1.2 | Normalize words without an intermediate rune buffer. |
